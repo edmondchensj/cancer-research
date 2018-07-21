@@ -1,0 +1,13 @@
+,PMID,Year,Title,Total_times_cited,Topic_1,Topic_2,Topic_3,Topic_4,Topic_5,Topic_6,Topic_7,Topic_8,Topic_9,Topic_10,Topic_11,Topic_12,Dominant Topic
+0,20054639,2010,Lack of association between the hOGG1 Ser326Cys polymorphism and breast cancer risk: evidence from 11 case-control studies.,11,0.5287485122680664,,,0.028863752260804176,,,0.43009236454963684,,,,,,Topic_1
+1,24107821,2013,[Monoclonal antibody therapy in breast cancer].,0,,0.5623697638511658,,,,,0.28887617588043213,,,0.06371955573558807,,0.07897373288869858,Topic_2
+2,21312011,2011,A patient presenting nasal septum perforation during bevacizumab-containing chemotherapy for advanced breast cancer.,1,0.022116847336292267,,0.42859387397766113,,,,0.3086742162704468,0.09828776866197586,,0.09417388588190079,,0.035844024270772934,Topic_3
+3,18402346,2008,Integrative review of spirituality in African American breast cancer survivors.,12,,,,0.35630881786346436,,,0.5994019508361816,,0.013141794130206108,0.023115217685699463,,,Topic_7
+4,27346470,2016,Oncoplastic breast-conserving surgery in breast cancer treatment Systematic review of the literature.,0,,,,,0.7060623168945312,,0.12252441793680191,0.105649933218956,,0.010725830681622028,,0.044923484325408936,Topic_5
+5,24415987,2014,Commonly used methods of complementary medicine in the treatment of breast cancer.,2,,,,,,0.6786614060401917,0.25525912642478943,,0.01320127584040165,0.015267356298863888,,0.033383749425411224,Topic_6
+6,22037780,2011,A systematic review of breast cancer incidence risk prediction models with meta-analysis of their performance.,32,,,,,,,0.995439350605011,,,,,,Topic_7
+7,22476850,2012,Can diffusion-weighted MR imaging and contrast-enhanced MR imaging precisely evaluate and predict pathological response to neoadjuvant chemotherapy in patients with breast cancer?,25,,,,,,,,0.9917416572570801,,,,,Topic_8
+8,26339914,2015,[Fulvestrant (Faslodex®) for hormone sensitive breast cancer. A review].,0,0.011949308216571808,,,,,,0.2418765127658844,,0.6776689291000366,0.01508508063852787,,0.04786453768610954,Topic_9
+9,29279075,2017,[Pregnancy after Breast Cancer: State of the Art].,0,,,,,,,0.1294369399547577,0.01198322419077158,,0.8271883726119995,,,Topic_10
+10,24592003,2011,Pregnancy associated breast cancer and pregnancy after breast cancer treatment.,0,,,,,,,0.15035730600357056,0.08986116200685501,,0.029752153903245926,0.6886926889419556,0.03888564929366112,Topic_11
+11,21036202,2010,Estrogen-induced reactive oxygen species-mediated signalings contribute to breast cancer.,35,,,,,,,,,,,,0.9933574795722961,Topic_12
