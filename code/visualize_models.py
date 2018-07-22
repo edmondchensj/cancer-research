@@ -48,7 +48,7 @@ class colormap_size_func(object):
         return "rgb({:.0f}, {:.0f}, {:.0f})".format(r, g, b)
 
 def get_wordcloud(model,current_dir):
-    print("\nNow creating wordclouds...")
+    print("\n* Now creating wordclouds...")
     from PIL import Image
     icon_path = "helper_files/circle.png"
     icon = Image.open(icon_path)
@@ -73,7 +73,7 @@ def get_wordcloud(model,current_dir):
     print("Wordclouds saved.")
         
 def get_pyLDAvis(model,corpus,id2word,current_dir):
-    print("\nNow we will visualize the topics using pyLDAvis.")
+    print("\n* Now we will visualize the topics using pyLDAvis.")
     vis = pyLDAvis.gensim.prepare(model, corpus, id2word, sort_topics=False)
     pyLDAvis.save_html(vis,'%s/topic_model.html'%current_dir)
     print("PyLDAvis saved to html.")
@@ -100,7 +100,7 @@ def make_dir(parent_dir,model):
     return current_dir
 
 def load_preprocess_data(parent_dir):
-    print('Getting data from %s ...' %parent_dir)
+    print('* Getting data from %s ...' %parent_dir)
     corpus = corpora.MmCorpus('%s/preprocess/corpus.mm' %parent_dir)
     id2word = np.load('%s/preprocess/id2word.dict' %parent_dir)
     return corpus,id2word
@@ -115,16 +115,19 @@ def load_models(parent_dir):
     return models
 
 def main():
-    parent_dir = 'saved_files/2007_to_2017'
+    parent_dir = 'saved_files/1997_to_2017'
 
     corpus,id2word = load_preprocess_data(parent_dir)
     models = load_models(parent_dir)
 
     for model in models:
+        if model.num_topics != 13:
+            continue
         current_dir = make_dir(parent_dir,model)
         get_pyLDAvis(model,corpus,id2word,current_dir)
         get_wordcloud(model,current_dir)
-        wordcloudgrid.basic_grid(model,current_dir,current_dir)
+        wordcloudgrid.basicGrid(model,current_dir,current_dir)
+        input('Press Enter to continue.')
 
 if __name__ == "__main__":
     main()

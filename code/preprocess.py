@@ -40,7 +40,8 @@ def remove_stopwords(texts):
     stop_words = stopwords.words('english')
     breastcancer_stopwords = ['breast','cancer','woman','women','female','risk','risks','patient','patients',
     'screening','screen','screens','screenings','treatment','therapy','therapies','study','studies','research','diagnosis',
-    'management','disease','survive','surviving','survival','stage','trial','trials']
+    'management','disease','survive','surviving','survival','stage','trial','trials','clinical','tumor','tumors',
+    'factor','factors']
     stop_words += breastcancer_stopwords
     return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
@@ -66,18 +67,23 @@ def make_ngrams(texts):
 def refine_data(file_name,start_year,end_year):
     pd.options.display.max_colwidth = 12
     df = pd.read_csv(file_name)
-    print("\nPreviewing input data:")
+    print("* -> Previewing input data:")
     pprint(df.head())
-    print("No. of entries in input data file: %d" %df.shape[0])
+    print("* -> [INFO] No. of entries in input data file: %d" %df.shape[0])
     df_new = df[(df['Year'] >= start_year) & (df['Year'] <= end_year)]
-    print("\nDrop entries outside of year range (%s - %s). New no. of entries: %d, entries dropped: %d" 
+
+    print("* -> [INFO] Drop entries outside of year range (%s - %s). New no. of entries: %d, entries dropped: %d" 
         %(start_year,end_year,df_new.shape[0],df.shape[0]-df_new.shape[0]))
-    print("Previewing new input data:")
     pprint(df_new.head())
-    print("Reset index:")
-    df = df_new.reset_index(drop=True)
-    pprint(df.head())
-    return df
+
+    print("* -> Shuffle rows randomly: ")
+    df_new = df_new.reindex(np.random.permutation(df_new.index))
+    pprint(df_new.head())
+
+    print("* -> Reset index:")
+    df_new.reset_index(drop=True,inplace=True)
+    pprint(df_new.head())
+    return df_new
 
 def get_preprocess_summary(data,data_words,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory):
     f = open('%s/phase1_summary.txt' %directory,'w')
@@ -111,35 +117,38 @@ def main():
     '''
     tic = time.time()
     file_name = "data/breastcancer_reviews_hasabstract_1997to2017.csv"
-    start_year = 2007
+    start_year = 1997
     end_year = 2017
     
+    print('* Loading and refining data ...')
     df = refine_data(file_name,start_year,end_year)
 
-    # Get abstracts as list
+    print('\n* Now running preprocessing ...')
+    print('* -> Getting abstracts in a list ...')
     data = df.Abstract.values.tolist()
-    # Make texts into a list of words
+    print('* -> Breaking down each abstract into list of words ...')
     data_words = list(sentence_to_words(data))
-    # Remove Stop Words
+    print('* -> Removing generic and cancer-specific stopwords ...')
     data_words_nostops = remove_stopwords(data_words)
-    # Form Bi- and tri-grams (words that appear together might be a term e.g. false_positive)
+    print('* -> Forming Bi- and tri-grams (words that appear together might be a term e.g. false_positive')
     data_words_ngrams = make_ngrams(data_words_nostops)
-    # Do lemmatization keeping only noun, adj, vb, adv. Plural -> singular etc. 
+    print('* -> Lemmatization i.e. keeping only noun, adj, vb, adv. Plural -> singular etc.')
     data_lemmatized = lemmatization(data_words_ngrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
-    # Create Dictionary
+    print('\n* Now making relevant files for topic modeling ...')
+    print('* -> Creating Dictionary')
     id2word = corpora.Dictionary(data_lemmatized)
-    # Create Corpus
+    print('* -> Creating Corpus')
     texts = data_lemmatized
-    # Term Document Frequency
     corpus = [id2word.doc2bow(text) for text in texts]
 
+    print('\n* Preprocessing complete. Now saving files ...')
     directory = make_directory(start_year,end_year)
     get_preprocess_summary(data,data_words,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory)
     save_for_later(corpus,id2word,texts,df,directory)
 
     toc = time.time()
-    print('Preprocessing complete. Time taken: %.2fs' %(toc-tic))
+    print('* Files saved. Time taken: %.2fs' %(toc-tic))
 
     return corpus, id2word, texts, df
 

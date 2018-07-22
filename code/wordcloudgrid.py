@@ -31,17 +31,17 @@ def retrieve_wordclouds(wordcloud_dir):
     return [str(wordcloud_dir + '/' + img) for img in _sort_by_date(wordcloud_dir) if 'wordcloud_topic' in img]
 
 def get_dynamic_colors(data,cmap_relative):
-    if ~cmap_relative:
+    if cmap_relative: 
+        max_val = abs(max(data,key=abs))
+        bound = max_val + max_val/10
+        norm = Normalize(vmin=-bound, vmax=bound)
+        color = 'RdYlGn'
+    else:
         norm = Normalize(vmin=min(data), vmax=max(data)+(max(data)/8))
         color = 'Oranges'
-    else:
-        max_val = max(data,key=abs)
-        norm = Normalize(vmin=-max_val, vmax=max_val)
-        color = 'RdYlGn'
     cmap = cm.get_cmap(color)
     colors = list(map(lambda x: cmap(norm(x)), data))
     sm = plt.cm.ScalarMappable(cmap=cmap,norm=norm)
-    print('* [wordcloudgrid.py] cmap color: %s' %color)
     return colors,sm
 
 def generate_wc_grid(fig,gs,gridwidth,model,images,target_dir,sm=False,cbar_label=False,dynamic_color=False,tag=''):
@@ -66,47 +66,16 @@ def generate_wc_grid(fig,gs,gridwidth,model,images,target_dir,sm=False,cbar_labe
             ax.annotate('%s'%(idx+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small', color='gray')
             idx += 1
     if sm != False:
-        gs.update(left=0,right=0.92,wspace=-0.23)
-        cbar_ax = fig.add_axes([0.92,0.12,0.03,0.76])
+        gs.update(left=0,right=0.92,wspace=-0.3)
+        cbar_ax = fig.add_axes([0.9,0.12,0.02,0.76])
         sm.set_array([])
         cbar = plt.colorbar(sm,cax=cbar_ax)
-        print('* [wordcloudgrid.py] cbar label: %s' %cbar_label)
-        cbar.set_label('%s' %cbar_label,size='x-small')
-        cbar.ax.tick_params(labelsize='x-small',pad=-0.5)
+        cbar.set_label('%s' %cbar_label,size='xx-small',labelpad=-0.05)
+        cbar.ax.tick_params(labelsize='xx-small',pad=-0.15)
 
     fig_path = '%s/wordcloud_grid%s.png'%(target_dir,'_'+tag)
     fig.savefig(fig_path,dpi = 1000, bbox_inches='tight')
-    print('* [wordcloudgrid.py] Wordcloud grid saved.')
-    return fig_path
-
-def basic_grid_backup(model,wordcloud_dir,target_dir):
-    print("\nNow combining wordclouds to grid...")
-    gridwidth = math.ceil(math.sqrt(model.num_topics))
-    print("Gridsize: %s x %s"%(gridwidth,gridwidth))
-    fig = plt.figure(figsize=(gridwidth,gridwidth))
-    gs = gridspec.GridSpec(gridwidth, gridwidth, wspace=0, hspace=0.10)
-    images = [img for img in _sort_by_date(wordcloud_dir) if 'wordcloud_topic' in img]
-    print("List of wordclouds:")
-    print(images)
-
-    idx = 0
-    for i,j in product(range(gridwidth),range(gridwidth)):
-        if idx==model.num_topics:
-            break
-        else:
-            img = mpimg.imread(wordcloud_dir + '/' + images[idx])
-            ax = plt.subplot(gs[i,j])
-            ax.imshow(img)
-            for pos in ['top', 'bottom', 'right', 'left']:
-                ax.spines[pos].set_color('#E5E7E9')
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.annotate('%s'%(idx+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small', color='#E5E7E9')
-            idx += 1
-
-    fig_path = '%s/wordcloud_grid.png'%target_dir
-    fig.savefig(fig_path,dpi = 1000)
-    print('* [wordcloudgrid.py] Wordcloud grid saved.')
+    print('* [wordcloudgrid.py] File saved: %s.' %fig_path)
     return fig_path
 
 def gradientGrid(model,data,wordcloud_dir,target_dir,tag='',cmap_relative=False,cbar_label=False):
@@ -122,8 +91,8 @@ def gradientGrid(model,data,wordcloud_dir,target_dir,tag='',cmap_relative=False,
     return fig_path
 
 def basicGrid(model,wordcloud_dir,target_dir):
-    print("* [wordcloudgrid.py] Now combining wordclouds to grid...")
-    fig, gs, gridwith = initialize_grid(model)
+    print("* [wordcloudgrid.py] Now visualizing model as wordcloud grid...")
+    fig, gs, gridwidth = initialize_grid(model)
     images = retrieve_wordclouds(wordcloud_dir)
     fig_path = generate_wc_grid(fig,gs,gridwidth,model,images,target_dir)
     return fig_path
