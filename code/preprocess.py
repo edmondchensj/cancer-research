@@ -40,10 +40,11 @@ def remove_stopwords(texts):
     stop_words = stopwords.words('english')
     breastcancer_stopwords = ['breast','cancer','woman','women','female','risk','risks','patient','patients',
     'screening','screen','screens','screenings','treatment','therapy','therapies','study','studies','research','diagnosis',
-    'management','disease','survive','surviving','survival','stage','trial','trials','clinical','tumor','tumors',
-    'factor','factors']
+    'management','disease','survive','surviving','survival','survivor','stage','trial','trials','clinical','tumor','tumors',
+    'factor','factors','cell','cells']
     stop_words += breastcancer_stopwords
-    return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
+    texts_nostops = [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
+    return texts_nostops, breastcancer_stopwords
 
 def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     #https://spacy.io/api/annotation
@@ -85,10 +86,14 @@ def refine_data(file_name,start_year,end_year):
     pprint(df_new.head())
     return df_new
 
-def get_preprocess_summary(data,data_words,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory):
-    f = open('%s/phase1_summary.txt' %directory,'w')
-    f.write('Phase 1: Text preprocessing (abstract-to-words, remove stopwords, make ngrams, lemmatize)\n')
-    f.write("\nSample abstract:\n")
+def get_preprocess_summary(data,data_words,stopwords,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory):
+    f = open('%s/preprocess_summary.txt' %directory,'w')
+    f.write('Data Info:\n')
+    f.write('Number of Documents: %s\n' %len(data))
+    f.write('\nPhase 1: Text preprocessing (abstract-to-words, remove stopwords, make ngrams, lemmatize)\n')
+    f.write("\nBreast Cancer Stopwords:\n")
+    f.write(str(stopwords))
+    f.write("\n\nSample abstract:\n")
     f.write(str((data[0])[:150]))
     f.write('\nAbstract to words:\n')
     f.write(str((data_words[0])[:10]))
@@ -129,7 +134,7 @@ def main():
     print('* -> Breaking down each abstract into list of words ...')
     data_words = list(sentence_to_words(data))
     print('* -> Removing generic and cancer-specific stopwords ...')
-    data_words_nostops = remove_stopwords(data_words)
+    data_words_nostops, breastcancer_stopwords = remove_stopwords(data_words)
     print('* -> Forming Bi- and tri-grams (words that appear together might be a term e.g. false_positive')
     data_words_ngrams = make_ngrams(data_words_nostops)
     print('* -> Lemmatization i.e. keeping only noun, adj, vb, adv. Plural -> singular etc.')
@@ -144,7 +149,7 @@ def main():
 
     print('\n* Preprocessing complete. Now saving files ...')
     directory = make_directory(start_year,end_year)
-    get_preprocess_summary(data,data_words,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory)
+    get_preprocess_summary(data,data_words,breastcancer_stopwords,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory)
     save_for_later(corpus,id2word,texts,df,directory)
 
     toc = time.time()

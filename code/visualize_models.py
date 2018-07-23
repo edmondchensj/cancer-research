@@ -121,7 +121,10 @@ def main():
     models = load_models(parent_dir)
 
     for model in models:
-        if model.num_topics != 13:
+        # Select models to run. 
+        print('\n* Now visualizing for %s topics model ...' %model.num_topics)
+        if not model.num_topics in [13,15,17]:
+            print('* --Skip-- ')
             continue
         current_dir = make_dir(parent_dir,model)
         get_pyLDAvis(model,corpus,id2word,current_dir)

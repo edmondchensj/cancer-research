@@ -18,11 +18,18 @@ Function Name Style Guide:
 def _sort_by_date(path):
     return list(sorted(os.listdir(path), key=lambda f: os.stat(os.path.join(path, f)).st_mtime))
 
-def initialize_grid(model):
-    gridwidth = math.ceil(math.sqrt(model.num_topics))
-    fig = plt.figure(figsize=(gridwidth,gridwidth))
-    gs = gridspec.GridSpec(gridwidth, gridwidth, wspace=0, hspace=0.10)
-    return fig, gs, gridwidth
+def initialize_grid(model,gradient):
+    num_topics = model.num_topics
+    row = math.ceil(math.sqrt(num_topics))
+    col = row
+    fig = plt.figure(figsize=(row,col))
+    gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
+
+    # auto adjust to rectangle 
+    if gradient and (math.ceil(num_topics/row) < row): 
+        col = col - 1
+        fig.set_size_inches(col,row)
+    return fig, gs, row, col
 
 def retrieve_wordclouds(wordcloud_dir):
     '''
@@ -44,12 +51,15 @@ def get_dynamic_colors(data,cmap_relative):
     sm = plt.cm.ScalarMappable(cmap=cmap,norm=norm)
     return colors,sm
 
-def generate_wc_grid(fig,gs,gridwidth,model,images,target_dir,sm=False,cbar_label=False,dynamic_color=False,tag=''):
+def generate_wc_grid(model,wordcloud_dir,target_dir,gradient=False,dynamic_color=None,sm=None,cbar_label=None,tag=''):
     '''
-    If dynamic_color=False, this function will generate a basic grid with fixed box color.
+    If gradient=False, this function will generate a basic grid with fixed box color.
     '''
+    fig, gs, row, col = initialize_grid(model,gradient)
+    images = retrieve_wordclouds(wordcloud_dir)
+
     idx=0
-    for i,j in product(range(gridwidth),range(gridwidth)):
+    for i,j in product(range(row),range(col)):
         if idx==model.num_topics:
             break
         else:
@@ -57,16 +67,20 @@ def generate_wc_grid(fig,gs,gridwidth,model,images,target_dir,sm=False,cbar_labe
             ax = plt.subplot(gs[i,j])
             ax.imshow(img)
             for pos in ['top', 'bottom', 'right', 'left']:
-                if dynamic_color==False:
-                    ax.spines[pos].set_color('#E5E7E9')
-                else:
+                if gradient:
                     ax.spines[pos].set_color(dynamic_color[idx])
+                else:
+                    ax.spines[pos].set_color('#E5E7E9')
             ax.set_xticks([])
             ax.set_yticks([])
             ax.annotate('%s'%(idx+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small', color='gray')
             idx += 1
-    if sm != False:
-        gs.update(left=0,right=0.92,wspace=-0.3)
+
+    if gradient:
+        if row == col:
+            gs.update(left=0,right=0.92,wspace=-0.3)
+        else:
+            gs.update(left=0,right=0.99,wspace=0.1)
         cbar_ax = fig.add_axes([0.9,0.12,0.02,0.76])
         sm.set_array([])
         cbar = plt.colorbar(sm,cax=cbar_ax)
@@ -84,15 +98,11 @@ def gradientGrid(model,data,wordcloud_dir,target_dir,tag='',cmap_relative=False,
     This is useful for side-by-side graphs, where the left shows a bar or line plot, and the right is this wordcloud grid.
     '''
     print("* [wordcloudgrid.py] Now making wordcloud grid with color gradients ...")
-    fig, gs, gridwidth = initialize_grid(model)
-    images = retrieve_wordclouds(wordcloud_dir)
-    colors,sm = get_dynamic_colors(data,cmap_relative)
-    fig_path = generate_wc_grid(fig,gs,gridwidth,model,images,target_dir,sm=sm,cbar_label=cbar_label,dynamic_color=colors,tag=tag)
+    dynamic_color,sm = get_dynamic_colors(data,cmap_relative)
+    fig_path = generate_wc_grid(model,wordcloud_dir,target_dir,gradient=True,dynamic_color=dynamic_color,sm=sm,cbar_label=cbar_label,tag=tag)
     return fig_path
 
 def basicGrid(model,wordcloud_dir,target_dir):
     print("* [wordcloudgrid.py] Now visualizing model as wordcloud grid...")
-    fig, gs, gridwidth = initialize_grid(model)
-    images = retrieve_wordclouds(wordcloud_dir)
-    fig_path = generate_wc_grid(fig,gs,gridwidth,model,images,target_dir)
+    fig_path = generate_wc_grid(model,wordcloud_dir,target_dir)
     return fig_path

@@ -65,7 +65,7 @@ def get_topn_models(models,coherence_values,num_topics_range,model_dir,n=7):
     '''
     Saves top n models below cutoff+1 number of topics.  
     '''
-    cutoff = 18
+    cutoff = 20
     print('* Now getting top %d models at max %d topics' %(n,cutoff))
     seq = get_top_scores_and_index(coherence_values,num_topics_range,cutoff)
     topn_scores_idx = heapq.nlargest(n, seq)

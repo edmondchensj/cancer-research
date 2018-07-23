@@ -13,36 +13,8 @@ import wordcloudgrid as wcg
 import graphing as gr
 
 '''
-Preparation step:
+Load data
 '''
-def load_topic_scores(model,current_dir):
-    print('* -> Loading topic scores ...')
-    df = pd.read_csv('%s/df_topic_scores.csv'%current_dir)
-    df.drop(columns=['Unnamed: 0'])
-    return df
-
-def get_doc_topic_scores(model,corpus,df,directory):
-    print("* -> Getting topic scores for documents ...")
-    topic_cols = []
-    for topic_num in range(model.num_topics):
-        topic_cols.append('Topic_%s'%(topic_num+1))
-    doc_topics_df = pd.DataFrame(columns=topic_cols)
-    
-    # Access each document by row
-    for i, row in enumerate(model[corpus]):
-        doc = pd.Series(index=topic_cols)
-        for j, (topic_num, prop_topic) in enumerate(row): # prop_topic is the percentage contribution of a topic to a comment.
-            doc['Topic_%s'%(topic_num+1)] = prop_topic
-        doc_topics_df = doc_topics_df.append(doc,ignore_index=True)
-
-    # Get 'dominant' topic of each document. 
-    doc_topics_df['Dominant Topic'] = doc_topics_df.idxmax(axis=1)
-
-    # Combine with original dataframe
-    df = pd.concat([df, doc_topics_df], axis=1)
-    df.to_csv('%s/df_topic_scores.csv'%directory)
-    return df
-
 def load_corpus(parent_dir):
     return corpora.MmCorpus('%s/preprocess/corpus.mm'%parent_dir)
 
@@ -74,74 +46,85 @@ def make_dir(parent_dir,model):
     return current_dir,wordcloud_dir
 
 '''
+Preparation step:
+'''
+def get_doc_topic_scores(model,corpus,df,directory):
+    print("* -> Getting topic scores for documents ...")
+    topic_cols = []
+    for topic_num in range(model.num_topics):
+        topic_cols.append('Topic_%s'%(topic_num+1))
+    doc_topics_df = pd.DataFrame(columns=topic_cols)
+    
+    # Access each document by row
+    for i, row in enumerate(model[corpus]):
+        doc = pd.Series(index=topic_cols)
+        for j, (topic_num, prop_topic) in enumerate(row): # prop_topic is the percentage contribution of a topic to a comment.
+            doc['Topic_%s'%(topic_num+1)] = prop_topic
+        doc_topics_df = doc_topics_df.append(doc,ignore_index=True)
+
+    # Get 'dominant' topic of each document. 
+    doc_topics_df['Dominant Topic'] = doc_topics_df.idxmax(axis=1)
+
+    # Combine with original dataframe
+    df = pd.concat([df, doc_topics_df], axis=1)
+    df.to_csv('%s/df_topic_scores.csv'%directory)
+    return df
+
+def load_topic_scores(model,current_dir):
+    print('* -> Loading topic scores ...')
+    df = pd.read_csv('%s/df_topic_scores.csv'%current_dir)
+    df.drop(columns=['Unnamed: 0'])
+    return df
+
+'''
 Output step:
 '''
-
-def get_topic_mentions(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir):
-    print('* -> Getting Topic Mentions ...')
-
+def get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir,std_footer):
     topic_cols = [col for col in df.columns if 'Topic_' in col]
+
+    print('* -> Getting Topic Distribution (Mentions) ...')
     topic_mentions = df[df>=topic_sensitivity].count()
     topic_mentions = topic_mentions[topic_cols]
-    topic_mentions.to_csv('%s/topic_mentions.csv'%current_dir)
+    topic_mentions.to_csv('%s/topic_dist_mentions.csv'%current_dir)
 
-    topic_keywords = _topic_keywords(model,corpus)
-    footnote = "$\mathregular{^{1}}$ Based on topic contribution of at least 0.05, according to Gensim's topic modeling algorithm.\nEach paper can have several topic mentions." %topic_sensitivity
-    graph = gr.plot_graph(topic_mentions,topic_keywords,model,current_dir,tag='mention',title='Topic Mentions$\mathregular{^{1}}$',footnote=footnote)
-    wcgrid = wcg.gradientGrid(model,topic_mentions,wordcloud_dir,current_dir,tag='mention',cbar_label='No. of Papers')
-    gr.merge_graph_wcgrid(graph,wcgrid,model,current_dir,tag='mention')
+    gr.show_distribution(topic_mentions,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,std_footer,dominant=False)
 
-def _topic_keywords(model,corpus,n=1):
-    topic_keywords = []
-    if n==0:
-        topic_keywords = range(1,model.num_topics+1,1)
-    else:
-        for i in range(model.num_topics):
-            words = list(dict(model.show_topic(i, n)).keys())
-            words_as_string = '%s (%s,...)' %(i+1,','.join(words))
-            topic_keywords.append(words_as_string)
-    return topic_keywords
-
-def get_topic_distribution(df,model,corpus,current_dir,wordcloud_dir):
-    print('* -> Getting Topic Distribution ...')
-
-    topic_cols = [col for col in df.columns if 'Topic_' in col]
+    print('* -> Getting Topic Distribution (Dominant) ...')
     topic_dist = df['Dominant Topic'].value_counts()
     topic_dist = topic_dist.reindex(index=topic_cols).fillna(0)
-    topic_dist.to_csv('%s/topic_dist.csv'%current_dir)
+    topic_dist.to_csv('%s/topic_dist_dominant.csv'%current_dir)
 
-    topic_keywords = _topic_keywords(model,corpus)
-    footnote = '$\mathregular{^{1}}$ Shows the number of papers in which the topic has the highest contribution.\n Only one main topic per paper.'
-    graph = gr.plot_graph(topic_dist,topic_keywords,model,current_dir,tag='distribution',title='Topic Distribution$\mathregular{^{1}}$',footnote=footnote)
-    wcgrid = wcg.gradientGrid(model,topic_dist,wordcloud_dir,current_dir,tag='distribution',cbar_label='No. of Papers')
-    gr.merge_graph_wcgrid(graph,wcgrid,model,current_dir,tag='distribution')
+    gr.show_distribution(topic_dist,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,std_footer,dominant=True)
 
-def get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir):
+def get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,std_footer):
     print('* -> Getting Year Trends  ...')
-    start_year = df['Year'].min()
-    end_year = df['Year'].max()
-    year_range = range(start_year,end_year+1,1)
     topic_range = range(model.num_topics)
 
     print('* - - > Get trend in terms of absolute papers  ...')
-    _absolute_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,year_range,topic_range)
+    relative = False
+    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative)
+    gr.show_trend(year_trend,total_growth,model,topic_sensitivity,current_dir,wordcloud_dir,std_footer,relative)
 
     print('* - - > Get trend in terms of proportion of total papers ...')
-    _relative_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,year_range,topic_range)
+    relative = True
+    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative)
+    gr.show_trend(year_trend,total_growth,model,topic_sensitivity,current_dir,wordcloud_dir,std_footer,relative)
 
-def _absolute_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,year_range,topic_range):
-    year_trend = gr.trend(df,topic_range,topic_sensitivity)
-    graph = gr.plot_trend(year_trend,year_range,model,current_dir)
-    total_growth = gr.total_growth(year_trend)
-    wcgrid = wcg.gradientGrid(model,total_growth,wordcloud_dir,current_dir,tag='trend_abs',cbar_label='Total growth (%)')
-    gr.merge_graph_wcgrid(graph,wcgrid,model,current_dir,tag='trend_abs')
+def _total_growth(year_trend):
+    func = lambda x: (x.values[-1] - x.values[0])/x.values[0]*100
+    total_growth = list(map(func,year_trend))
+    return total_growth
 
-def _relative_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,year_range,topic_range):
-    year_trend_rel = gr.trend(df,topic_range,topic_sensitivity,relative=True)
-    graph = gr.plot_trend(year_trend_rel,year_range,model,current_dir,relative=True)
-    total_growth = gr.total_growth(year_trend_rel)
-    wcgrid = wcg.gradientGrid(model,total_growth,wordcloud_dir,current_dir,tag='trend_rel',cmap_relative=True,cbar_label='Total growth (%)')
-    gr.merge_graph_wcgrid(graph,wcgrid,model,current_dir,tag='trend_rel')
+def _trend(df,topic_range,topic_sensitivity,relative=False):
+    year_trend = []
+    papers_per_year = df.groupby('Year').size()
+    for i in topic_range:
+        topic_mentions = df[df['Topic_%s'%(i+1)]>=topic_sensitivity].groupby('Year').size()
+        if relative:
+            topic_mentions = topic_mentions/papers_per_year
+        year_trend.append(topic_mentions)
+    total_growth = _total_growth(year_trend)
+    return year_trend, total_growth
 
 def most_cited_per_topic():
     void()
@@ -174,32 +157,31 @@ def main():
         Possibly just discuss along the way. 
 
     Summary:
-    [To do] adopt footer for data source (15), set background color? (peach) (7)
-    [To do] Remove 'tumor', 'factor', 'clinical', 'trial' and preprocess and model up to 25. (10)
-
-    [To do] Make bar chart for total growth alongside trend. (15)
-    [To do] Make Venn.  (30)
+    [To do] set background color? (peach) (7)
+    [To do] Make bar chart for total growth alongside trend. (15) Change orientation of grids to vertical.** Continue this.  (10)
+    [To do] Make Venn. (30)
     [To do] Most cited in each topic, with heatmap. (1.5h)
 
     1. What is ONE insight? 
         -> 1) Highest mentions: Chemo (treatment) + Tamoxifen (drug/hormonal) + Molecular biology. 
                 -> They account for .... % of total. 
                 -> Are they independent or interconnected? [To do] Make Venn.  (30)
-        -> 2) Highest growth: Stem (cancer stem cells - cscs), chemotherapy-resistance proteins (bcrp), ctc, immunotherapy... at ... ~200% total growth. [To do] Make bar chart for total growth alongside trend. (15) Change orientation of grids to vertical. (10)
-            * mentions based on 0.05~ sensitivity. 
+        -> 2) Highest growth: Stem (cancer stem cells - cscs), chemotherapy-resistance proteins (bcrp), ctc, immunotherapy... at ... ~200% total growth. whole brain radiotherapy -> note that doesn't mean positive. One of the top searches is paper that critiques WBRT. Ro is an antigen. 
         -> 3) Negative growth: erbeta (estrogen receptor), gemcitabine, older_adult. 
     2. What is ONE secondary benefit? 
         -> 1) Knowledge of medical terms in cancer research. 
-        -> 2) Recommended list?* [To do] Most cited in each topic, with heatmap. (1.5h)
+        -> 2) Recommended list?*
+    3. Data Source: Abstracts from 12000+ breast cancer review papers, published between 1997 and 2017. \nRetrieved from PubMed in June 2018. Modeled into topics using Gensim, an open-source library. 
     '''
     parent_dir = 'saved_files/1997_to_2017'
+    std_footer = 'Data Source: Abstracts from 12,000+ breast cancer review papers on PubMed, published between 1997 and 2017.'
 
     corpus = load_corpus(parent_dir)
     models = load_models(parent_dir)
 
     for model in models:
         print('\n* Now postprocessing for %s topics model ...' %model.num_topics)
-        if model.num_topics != 13:
+        if model.num_topics != 17:
             print('* --Skip-- ')
             continue
 
@@ -208,15 +190,14 @@ def main():
 
         print('\n* Preparation step: ')
         #df = get_doc_topic_scores(model,corpus,df,current_dir)
-        df = load_topic_scores(model,current_dir)
+        df = load_topic_scores(model,current_dir) # for if topic_scores already retrieved. 
 
         print('\n* Output step: ')
         topic_sensitivity = 0.05
-        get_topic_mentions(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir)
-        get_topic_distribution(df,model,corpus,current_dir,wordcloud_dir)
-        #get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir)
+        #get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir,std_footer)
+        get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,std_footer)
         #most_rep_titles = most_representative_titles(model,df,current_dir)
-        #input('* Press Enter to continue.')
+        input('* Press Enter to continue.')
 
 if __name__ == "__main__":
     main()

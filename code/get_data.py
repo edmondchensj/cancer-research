@@ -96,8 +96,8 @@ def main(query,api,limit):
 	print('Download complete.')
 
 if __name__ == "__main__":
-	api = 'c1da8a7e6a61c63d1540db9488d64e22c208'
-	email = "chensje@hotmail.com"
+	api = ""
+	email = ""
 	Entrez.email = email
 	keyword = "breast cancer"
 	year_from = "1997"
