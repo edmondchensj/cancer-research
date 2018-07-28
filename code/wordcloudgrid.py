@@ -8,41 +8,43 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 from itertools import product
 
-'''
-Function Name Style Guide:
-1. no underscores ('_'): Main Functions     e.g. gradientGrid()
-2. words separated by underscores: Sub Functions
-3. prefix underscore: weak internal use.    e.g. _sort_by_date()
-'''
+styling()
 
-# Styling
-matplotlib.style.use('seaborn-notebook')
-plt.rcParams['axes.facecolor']='#FDF6D8'
-plt.rcParams['savefig.facecolor']='#FDF6D8'
-plt.rcParams['axes.labelweight'] = 'bold'
+def styling(): 
+    plt.style.use('ggplot')
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['axes.facecolor']='#FDF6D8'
+    plt.rcParams['axes.labelsize'] = 'small'
+    plt.rcParams['axes.labelweight'] = 'bold'
+    plt.rcParams['xtick.labelsize'] = 'xx-small'
+    plt.rcParams['ytick.labelsize'] = 'xx-small'
+    plt.rcParams['legend.fontsize'] = 'x-small'
+    plt.rcParams['figure.autolayout'] = True # equiv to plt.tight_layout()
+    plt.rcParams['savefig.facecolor']='#FDF6D8'
+    plt.rcParams['savefig.bbox'] = 'tight' # might be bbox_inches instead
+    plt.rcParams['savefig.dpi'] = 1000
 
 def _sort_by_date(path):
     return list(sorted(os.listdir(path), key=lambda f: os.stat(os.path.join(path, f)).st_mtime))
 
-def initialize_grid(model,gradient):
-    num_topics = model.num_topics
+def retrieve_wordclouds(wordcloud_dir):
+    return [str(wordcloud_dir + '/' + img) for img in _sort_by_date(wordcloud_dir) if 'wordcloud_topic' in img]
+
+def initialize_grid(num_topics,gradient):
     row = math.ceil(math.sqrt(num_topics))
     col = row
     fig = plt.figure(figsize=(row,col))
-
-    # auto adjust to rectangle 
-    if gradient and (math.ceil(num_topics/row) < row): 
+    if gradient and (math.ceil(num_topics/row) < row): # auto adjust to rectangle 
         col = col - 1
         fig.set_size_inches(col,row)
-    
     gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
     return fig, gs, row, col
 
-def retrieve_wordclouds(wordcloud_dir):
-    '''
-    Returns list of filepaths for saved wordclouds
-    '''
-    return [str(wordcloud_dir + '/' + img) for img in _sort_by_date(wordcloud_dir) if 'wordcloud_topic' in img]
+def _save_and_close(fig,figpath):
+    fig.savefig(figpath)
+    plt.close()
+    print('* [wordcloudgrid.py] File saved: %s.' %figpath)
+    return figpath
 
 def get_dynamic_colors(data,cmap_relative):
     if cmap_relative: 
@@ -58,32 +60,24 @@ def get_dynamic_colors(data,cmap_relative):
     sm = plt.cm.ScalarMappable(cmap=cmap,norm=norm)
     return colors,sm
 
-def generate_wc_grid(model,wordcloud_dir,target_dir,gradient=False,dynamic_color=None,sm=None,cbar_label=None,tag=''):
-    '''
-    If gradient=False, this function will generate a basic grid with fixed box color.
-    '''
-    fig, gs, row, col = initialize_grid(model,gradient)
+def generate_wc_grid(num_topics,wordcloud_dir,target_dir,gradient=False,dynamic_color=None,sm=None,cbar_label=None,tag=''):
+    fig, gs, row, col = initialize_grid(num_topics,gradient)
     images = retrieve_wordclouds(wordcloud_dir)
 
-    idx=0
-    for i,j in product(range(row),range(col)):
-        if idx==model.num_topics:
-            break
-        else:
-            img = mpimg.imread(images[idx])
-            ax = plt.subplot(gs[i,j])
-            ax.imshow(img)
-            for pos in ['top', 'bottom', 'right', 'left']:
-                if gradient:
-                    ax.spines[pos].set_color(dynamic_color[idx])
-                else:
-                    ax.spines[pos].set_color('#E5E7E9')
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.annotate('%s'%(idx+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small', color='gray')
-            idx += 1
+    for i in range(num_topics):
+        img = mpimg.imread(images[i])
+        ax = plt.subplot(gs[i])
+        ax.imshow(img)
+        for pos in ['top', 'bottom', 'right', 'left']:
+            if gradient:
+                ax.spines[pos].set_color(dynamic_color[i])
+            else:
+                ax.spines[pos].set_color('#E5E7E9')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.annotate('%s'%(i+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small', color='gray')
 
-    if gradient:
+    if gradient: # Emphasize topics if gradient==True
         if row == col:
             gs.update(left=0,right=0.92,wspace=-0.3)
         else:
@@ -94,22 +88,16 @@ def generate_wc_grid(model,wordcloud_dir,target_dir,gradient=False,dynamic_color
         cbar.set_label('%s' %cbar_label,size='xx-small',labelpad=-0.05)
         cbar.ax.tick_params(labelsize='xx-small',pad=-0.15)
 
-    fig_path = '%s/wordcloud_grid%s.png'%(target_dir,'_'+tag)
-    fig.savefig(fig_path,bbox_inches='tight',dpi=1000)
-    print('* [wordcloudgrid.py] File saved: %s.' %fig_path)
-    return fig_path
+    figpath = _save_and_close(fig,f'{target_dir}/wordcloud_grid{'_'+tag}.png')
+    return figpath
 
-def gradientGrid(model,data,wordcloud_dir,target_dir,tag='',cmap_relative=False,cbar_label=False):
-    '''
-    Takes in an array 'data' of length model.num_topics that changes color of each topic bounding box. 
-    This is useful for side-by-side graphs, where the left shows a bar or line plot, and the right is this wordcloud grid.
-    '''
+def gradientGrid(data,wordcloud_dir,target_dir,tag='',cmap_relative=False,cbar_label=False):
     print("* [wordcloudgrid.py] Now making wordcloud grid with color gradients ...")
     dynamic_color,sm = get_dynamic_colors(data,cmap_relative)
-    fig_path = generate_wc_grid(model,wordcloud_dir,target_dir,gradient=True,dynamic_color=dynamic_color,sm=sm,cbar_label=cbar_label,tag=tag)
-    return fig_path
+    figpath = generate_wc_grid(len(data),wordcloud_dir,target_dir,gradient=True,dynamic_color=dynamic_color,sm=sm,cbar_label=cbar_label,tag=tag)
+    return figpath
 
-def basicGrid(model,wordcloud_dir,target_dir):
+def basicGrid(num_topics,wordcloud_dir,target_dir):
     print("* [wordcloudgrid.py] Now visualizing model as wordcloud grid...")
-    fig_path = generate_wc_grid(model,wordcloud_dir,target_dir)
-    return fig_path
+    figpath = generate_wc_grid(num_topics,wordcloud_dir,target_dir)
+    return figpath

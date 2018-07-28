@@ -78,22 +78,6 @@ def get_pyLDAvis(model,corpus,id2word,current_dir):
     pyLDAvis.save_html(vis,'%s/topic_model.html'%current_dir)
     print("PyLDAvis saved to html.")
 
-#def choose_model_from_files(parent_dir):
-#    print("See list of saved files from build_model.py:")
-#    models = os.listdir(parent_dir)
-#    for i,model in enumerate(models):
-#        print(i,model)
-#    for i in range(3):
-#        try: 
-#            index = int(input("Select a model by its file index: "))
-#            break
-#        except: 
-#            error("Not a number. %d tries left."%(2-i))
-#    with open('saved_files/models/%s'%models[index], 'rb') as f:
-#        model = pickle.load(f)
-#    print("Model chosen: %s"%models[index])
-#    return model
-
 def make_dir(parent_dir,model):
     current_dir = '%s/visualize_models/%stopics'%(parent_dir,model.num_topics)
     os.makedirs(current_dir, exist_ok=True)
@@ -122,15 +106,18 @@ def main():
 
     for model in models:
         # Select models to run. 
-        print('\n* Now visualizing for %s topics model ...' %model.num_topics)
-        if not model.num_topics in [13,15,17]:
+        num_topics = model.num_topics
+        print(f'\n* Now visualizing for {num_topics} topics model ...')
+
+        ''' To select models '''
+        if not num_topics in [13,15,17]:
             print('* --Skip-- ')
             continue
+
         current_dir = make_dir(parent_dir,model)
         get_pyLDAvis(model,corpus,id2word,current_dir)
         get_wordcloud(model,current_dir)
-        wordcloudgrid.basicGrid(model,current_dir,current_dir)
-        input('Press Enter to continue.')
+        wordcloudgrid.basicGrid(num_topics,wordcloud_dir=current_dir,target_dir=current_dir)
 
 if __name__ == "__main__":
     main()

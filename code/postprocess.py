@@ -6,15 +6,12 @@ import pandas as pd
 import pickle
 import gensim.corpora as corpora
 import os
-import seaborn as sns
 
 # My own helper scripts
 import wordcloudgrid as wcg
 import graphing as gr
 
-'''
-Load data
-'''
+''' Load data '''
 def load_corpus(parent_dir):
     return corpora.MmCorpus('%s/preprocess/corpus.mm'%parent_dir)
 
@@ -45,9 +42,7 @@ def make_dir(parent_dir,model):
     wordcloud_dir = '%s/visualize_models/%stopics'%(parent_dir,model.num_topics)
     return current_dir,wordcloud_dir
 
-'''
-Preparation step:
-'''
+''' Preparation '''
 def get_doc_topic_scores(model,corpus,df,directory):
     print("* -> Getting topic scores for documents ...")
     topic_cols = []
@@ -55,82 +50,27 @@ def get_doc_topic_scores(model,corpus,df,directory):
         topic_cols.append('Topic_%s'%(topic_num+1))
     doc_topics_df = pd.DataFrame(columns=topic_cols)
     
-    # Access each document by row
     for i, row in enumerate(model[corpus]):
         doc = pd.Series(index=topic_cols)
         for j, (topic_num, prop_topic) in enumerate(row): # prop_topic is the percentage contribution of a topic to a comment.
             doc['Topic_%s'%(topic_num+1)] = prop_topic
         doc_topics_df = doc_topics_df.append(doc,ignore_index=True)
 
-    # Get 'dominant' topic of each document. 
     doc_topics_df['Dominant Topic'] = doc_topics_df.idxmax(axis=1)
-
-    # Combine with original dataframe
     df = pd.concat([df, doc_topics_df], axis=1)
-    df.to_csv('%s/df_topic_scores.csv'%directory)
+    df.to_csv('%s/df_topic_scores.csv'%directory,index=False)
     return df
 
 def load_topic_scores(model,current_dir):
     print('* -> Loading topic scores ...')
     df = pd.read_csv('%s/df_topic_scores.csv'%current_dir)
-    df.drop(columns=['Unnamed: 0'])
+    try:
+        df.drop(columns=['Unnamed: 0'])
+    except:
+        print('Document does not have "Unnamed" column.')
     return df
 
-'''
-Output step:
-'''
-def get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir,std_footer):
-    topic_cols = [col for col in df.columns if 'Topic_' in col]
-
-    print('* -> Getting Topic Distribution (Mentions) ...')
-    topic_mentions = df[df>=topic_sensitivity].count()
-    topic_mentions = topic_mentions[topic_cols]
-    topic_mentions.to_csv('%s/topic_dist_mentions.csv'%current_dir)
-
-    gr.show_distribution(topic_mentions,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,std_footer,dominant=False)
-
-    print('* -> Getting Topic Distribution (Dominant) ...')
-    topic_dist = df['Dominant Topic'].value_counts()
-    topic_dist = topic_dist.reindex(index=topic_cols).fillna(0)
-    topic_dist.to_csv('%s/topic_dist_dominant.csv'%current_dir)
-
-    gr.show_distribution(topic_dist,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,std_footer,dominant=True)
-
-def get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,std_footer):
-    print('* -> Getting Year Trends  ...')
-    topic_range = range(model.num_topics)
-
-    print('* - - > Get trend in terms of absolute papers  ...')
-    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative=False)
-    gr.show_trend(year_trend,total_growth,model,topic_sensitivity,current_dir,wordcloud_dir,std_footer,relative)
-
-    print('* - - > Get trend in terms of proportion of total papers ...')
-    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative=True)
-    gr.show_trend(year_trend,total_growth,model,topic_sensitivity,current_dir,wordcloud_dir,std_footer,relative)
-
-    #print('* - - > Plot total growth ... ')
-    #gr.show_growth(total_growth,model,current_dir,wordcloud_dir,relative=True)
-    
-def _total_growth(year_trend):
-    func = lambda x: (x.values[-1] - x.values[0])/x.values[0]*100
-    total_growth = list(map(func,year_trend))
-    return total_growth
-
-def _trend(df,topic_range,topic_sensitivity,relative=False):
-    year_trend = []
-    papers_per_year = df.groupby('Year').size()
-    for i in topic_range:
-        topic_mentions = df[df['Topic_%s'%(i+1)]>=topic_sensitivity].groupby('Year').size()
-        if relative:
-            topic_mentions = topic_mentions/papers_per_year
-        year_trend.append(topic_mentions)
-    total_growth = _total_growth(year_trend)
-    return year_trend, total_growth
-
-
-def most_cited_per_topic():
-    void()
-
+''' Output '''
 def most_representative_titles(model,df,directory):
     num_topics = model.num_topics
 
@@ -143,51 +83,71 @@ def most_representative_titles(model,df,directory):
     df_most_rep_titles.to_csv('%s/most_representative_titles.csv'%directory)
     return df_most_rep_titles
 
+def get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir):
+    print('* -> Getting Topic Distribution (Mentions) ...')
+    topic_mentions = df[df>=topic_sensitivity].count()
+    topic_mentions = topic_mentions[[col for col in df.columns if 'Topic_' in col]]
+    topic_mentions.to_csv('%s/topic_dist_mentions.csv'%current_dir)
+
+    gr.show_distribution(topic_mentions,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,dominant=False)
+
+    print('* -> Getting Topic Distribution (Dominant) ...')
+    topic_dist = df['Dominant Topic'].value_counts()
+    topic_dist = topic_dist.reindex(index=topic_cols).fillna(0)
+    topic_dist.to_csv('%s/topic_dist_dominant.csv'%current_dir)
+
+    gr.show_distribution(topic_dist,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,dominant=True)
+
+def get_year_trend(df,num_topics,current_dir,topic_sensitivity,wordcloud_dir):
+    print('* -> Getting Year Trends  ...')
+
+    print('* - - > Get trend in terms of absolute papers  ...')
+    year_trend,total_growth = _trend(df,num_topics,topic_sensitivity,relative=False)
+    gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
+
+    print('* - - > Get trend in terms of proportion of total papers ...')
+    year_trend,total_growth = _trend(df,num_topics,topic_sensitivity,relative=True)
+    gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=True)
+
+def _total_growth(year_trend):
+    func = lambda x: (x.values[-1] - x.values[0])/x.values[0]*100
+    return list(map(func,year_trend))
+
+def _trend(df,num_topics,topic_sensitivity,relative=False):
+    year_trend = []
+    papers_per_year = df.groupby('Year').size()
+    for i in range(num_topics):
+        topic_mentions = df[df['Topic_%s'%(i+1)]>=topic_sensitivity].groupby('Year').size()
+        if relative:
+            topic_mentions = topic_mentions/papers_per_year
+        year_trend.append(topic_mentions)
+    total_growth = _total_growth(year_trend)
+    return year_trend, total_growth
+
+def most_cited_per_topic():
+    pass
+
 def main():
     '''
-    Preparation:
-    1. Get topic scores for each document
-
-    Output:
-    1. Distribution of research papers with mentions of topic (also share link to dominant topic distribution.)
-    2. Year-on-year trend* -> interested to know about. 
-    3. Most cited docs for each topic as a recommended list. 
-        a. Histogram of intra-PubMed citations (x) (20)
-        b. Topic mentions among top N (e.g. 100) most cited papers. (x) (15)
-        c. Most cited in each topic as recommended list. (x - time+don't show too much)
-    4. (Possible - not sure.) Go in depth with the most popular 3-5 topics. Identify keywords - can show on heatmap.
-        Possibly just discuss along the way. 
-
-    Summary:
+    Next steps:
     [To do] Clean code (1)
     [To do] Highlight highest growth and lowest growth (make bold) (1h)
-    [To do] Make Venn. (30)
+    [To do] Make Venn. (1)
     [To do] Topic Mentions  - add y-axis for topic. container for title. 
     [x] Most cited in each topic, with score heatmap. (1.5h)
     [To do] Separate function for image containers (footnote,caption) (1h)
     [To do] Stylize, present (1+1)
-
-    1. What is ONE insight? 
-        -> 1) Highest mentions: Chemo (treatment) + Tamoxifen (drug/hormonal) + Molecular biology. 
-                -> They account for .... % of total. 
-                -> Are they independent or interconnected? (Venn)
-        -> 2) Highest growth: Stem (cancer stem cells - cscs), chemotherapy-resistance proteins (bcrp), ctc, immunotherapy... at ... ~200% total growth. whole brain radiotherapy -> note that doesn't mean positive. One of the top searches is paper that critiques WBRT. Ro is an antigen. 
-        -> 3) Negative growth: erbeta (estrogen receptor), gemcitabine, older_adult. 
-                -> Interconnectedness (Venn)
-    2. What is ONE secondary benefit? 
-        -> 1) Knowledge of medical terms in cancer research. 
-        -> 2) Recommended list?*
-    3. Data Source: Abstracts from 12000+ breast cancer review papers, published between 1997 and 2017. \nRetrieved from PubMed in June 2018. Modeled into topics using Gensim, an open-source library. 
     '''
     parent_dir = 'saved_files/1997_to_2017'
-    std_footer = 'Data Source: Abstracts from 12,000+ breast cancer review papers on PubMed, published between 1997 and 2017.'
-
     corpus = load_corpus(parent_dir)
     models = load_models(parent_dir)
 
     for model in models:
-        print('\n* Now postprocessing for %s topics model ...' %model.num_topics)
-        if model.num_topics != 17:
+        num_topics = model.num_topics
+        print(f'\n* Now postprocessing for {num_topics} topics model ...')
+
+        ''' To select models '''
+        if num_topics != 17:
             print('* --Skip-- ')
             continue
 
@@ -196,12 +156,12 @@ def main():
 
         print('\n* Preparation step: ')
         #df = get_doc_topic_scores(model,corpus,df,current_dir)
-        df = load_topic_scores(model,current_dir) # for if topic_scores already retrieved. 
+        df = load_topic_scores(model,current_dir) # if topic_scores already retrieved. 
 
         print('\n* Output step: ')
         topic_sensitivity = 0.05
-        #get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir,std_footer)
-        get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,std_footer)
+        #get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir)
+        get_year_trend(df,num_topics,current_dir,topic_sensitivity,wordcloud_dir)
         #most_rep_titles = most_representative_titles(model,df,current_dir)
 
 if __name__ == "__main__":
