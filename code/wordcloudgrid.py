@@ -15,6 +15,12 @@ Function Name Style Guide:
 3. prefix underscore: weak internal use.    e.g. _sort_by_date()
 '''
 
+# Styling
+matplotlib.style.use('seaborn-notebook')
+plt.rcParams['axes.facecolor']='#FDF6D8'
+plt.rcParams['savefig.facecolor']='#FDF6D8'
+plt.rcParams['axes.labelweight'] = 'bold'
+
 def _sort_by_date(path):
     return list(sorted(os.listdir(path), key=lambda f: os.stat(os.path.join(path, f)).st_mtime))
 
@@ -23,12 +29,13 @@ def initialize_grid(model,gradient):
     row = math.ceil(math.sqrt(num_topics))
     col = row
     fig = plt.figure(figsize=(row,col))
-    gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
 
     # auto adjust to rectangle 
     if gradient and (math.ceil(num_topics/row) < row): 
         col = col - 1
         fig.set_size_inches(col,row)
+    
+    gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
     return fig, gs, row, col
 
 def retrieve_wordclouds(wordcloud_dir):
@@ -82,13 +89,13 @@ def generate_wc_grid(model,wordcloud_dir,target_dir,gradient=False,dynamic_color
         else:
             gs.update(left=0,right=0.99,wspace=0.1)
         cbar_ax = fig.add_axes([0.9,0.12,0.02,0.76])
-        sm.set_array([])
-        cbar = plt.colorbar(sm,cax=cbar_ax)
+        sc = plt.gca().get_children()[0]
+        cbar = plt.colorbar(sc,cax=cbar_ax)
         cbar.set_label('%s' %cbar_label,size='xx-small',labelpad=-0.05)
         cbar.ax.tick_params(labelsize='xx-small',pad=-0.15)
 
     fig_path = '%s/wordcloud_grid%s.png'%(target_dir,'_'+tag)
-    fig.savefig(fig_path,dpi = 1000, bbox_inches='tight')
+    fig.savefig(fig_path,bbox_inches='tight',dpi=1000)
     print('* [wordcloudgrid.py] File saved: %s.' %fig_path)
     return fig_path
 

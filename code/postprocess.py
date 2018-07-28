@@ -101,15 +101,16 @@ def get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,std_foot
     topic_range = range(model.num_topics)
 
     print('* - - > Get trend in terms of absolute papers  ...')
-    relative = False
-    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative)
+    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative=False)
     gr.show_trend(year_trend,total_growth,model,topic_sensitivity,current_dir,wordcloud_dir,std_footer,relative)
 
     print('* - - > Get trend in terms of proportion of total papers ...')
-    relative = True
-    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative)
+    year_trend,total_growth = _trend(df,topic_range,topic_sensitivity,relative=True)
     gr.show_trend(year_trend,total_growth,model,topic_sensitivity,current_dir,wordcloud_dir,std_footer,relative)
 
+    #print('* - - > Plot total growth ... ')
+    #gr.show_growth(total_growth,model,current_dir,wordcloud_dir,relative=True)
+    
 def _total_growth(year_trend):
     func = lambda x: (x.values[-1] - x.values[0])/x.values[0]*100
     total_growth = list(map(func,year_trend))
@@ -125,6 +126,7 @@ def _trend(df,topic_range,topic_sensitivity,relative=False):
         year_trend.append(topic_mentions)
     total_growth = _total_growth(year_trend)
     return year_trend, total_growth
+
 
 def most_cited_per_topic():
     void()
@@ -152,22 +154,26 @@ def main():
     3. Most cited docs for each topic as a recommended list. 
         a. Histogram of intra-PubMed citations (x) (20)
         b. Topic mentions among top N (e.g. 100) most cited papers. (x) (15)
-        c. Most cited in each topic as recommended list.
+        c. Most cited in each topic as recommended list. (x - time+don't show too much)
     4. (Possible - not sure.) Go in depth with the most popular 3-5 topics. Identify keywords - can show on heatmap.
         Possibly just discuss along the way. 
 
     Summary:
-    [To do] set background color? (peach) (7)
-    [To do] Make bar chart for total growth alongside trend. (15) Change orientation of grids to vertical.** Continue this.  (10)
+    [To do] Clean code (1)
+    [To do] Highlight highest growth and lowest growth (make bold) (1h)
     [To do] Make Venn. (30)
-    [To do] Most cited in each topic, with heatmap. (1.5h)
+    [To do] Topic Mentions  - add y-axis for topic. container for title. 
+    [x] Most cited in each topic, with score heatmap. (1.5h)
+    [To do] Separate function for image containers (footnote,caption) (1h)
+    [To do] Stylize, present (1+1)
 
     1. What is ONE insight? 
         -> 1) Highest mentions: Chemo (treatment) + Tamoxifen (drug/hormonal) + Molecular biology. 
                 -> They account for .... % of total. 
-                -> Are they independent or interconnected? [To do] Make Venn.  (30)
+                -> Are they independent or interconnected? (Venn)
         -> 2) Highest growth: Stem (cancer stem cells - cscs), chemotherapy-resistance proteins (bcrp), ctc, immunotherapy... at ... ~200% total growth. whole brain radiotherapy -> note that doesn't mean positive. One of the top searches is paper that critiques WBRT. Ro is an antigen. 
         -> 3) Negative growth: erbeta (estrogen receptor), gemcitabine, older_adult. 
+                -> Interconnectedness (Venn)
     2. What is ONE secondary benefit? 
         -> 1) Knowledge of medical terms in cancer research. 
         -> 2) Recommended list?*
@@ -197,7 +203,6 @@ def main():
         #get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir,std_footer)
         get_year_trend(df,model,current_dir,topic_sensitivity,wordcloud_dir,std_footer)
         #most_rep_titles = most_representative_titles(model,df,current_dir)
-        input('* Press Enter to continue.')
 
 if __name__ == "__main__":
     main()

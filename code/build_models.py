@@ -120,8 +120,14 @@ def get_coherence_values(corpus, id2word, texts, num_topics_range, num_trials):
     for i in range(num_trials):
         print("* Running Trial %s ..." %(i+1))
         for num_topics in num_topics_range:
+            '''
+            For TFIDF model: 
             tfidf_model = gensim.models.TfidfModel(corpus=corpus,id2word=id2word)
             model = gensim.models.ldamodel.LdaModel(corpus=tfidf_model[corpus], 
+                                                    id2word=id2word, 
+                                                    num_topics=num_topics)
+            '''
+            model = gensim.models.ldamodel.LdaModel(corpus=corpus, 
                                                     id2word=id2word, 
                                                     num_topics=num_topics)
             models[i].append(model)
