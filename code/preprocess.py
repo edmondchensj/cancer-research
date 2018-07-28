@@ -10,10 +10,8 @@ from gensim.utils import simple_preprocess
 
 # Misc
 import os
-import re
 import numpy as np
 import pandas as pd
-from pprint import pprint
 import pickle
 import time
 
@@ -38,11 +36,16 @@ def sentence_to_words(sentences):
 
 def remove_stopwords(texts):
     stop_words = stopwords.words('english')
-    breastcancer_stopwords = ['breast','cancer','woman','women','female','risk','risks','patient','patients',
+    breastcancer_stopwords = ['breast','breasts','cancer','cancers','cancerous','woman','women','female','risk','risks','patient','patients',
     'screening','screen','screens','screenings','treatment','therapy','therapies','study','studies','research','diagnosis',
-    'management','disease','survive','surviving','survival','survivor','stage','trial','trials','clinical','tumor','tumors',
+    'management','disease','survive','survived','surviving','survival','survivor','survivors','stage','trial','trials','clinical','tumor','tumors',
     'factor','factors','cell','cells']
-    stop_words += breastcancer_stopwords
+
+    additional_stopwords = ['molecular']
+    # The topic formed by molecular bio keywords (target,receptor,molecular) is mentioned in more than 90% of papers. 
+    molec_bio_stopwords = ['molecular','target','targets','receptor','receptors','role','roles','therapeutic']
+    
+    stop_words = stop_words + breastcancer_stopwords + molec_bio_stopwords
     texts_nostops = [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
     return texts_nostops, breastcancer_stopwords
 
@@ -51,7 +54,6 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     # Initialize spacy 'en' model, keeping only tagger component (for efficiency)
     # python3 -m spacy download en
     nlp = spacy.load('en', disable=['parser', 'ner'])
-
     texts_out = []
     for sent in texts:
         doc = nlp(" ".join(sent)) 
@@ -69,21 +71,21 @@ def refine_data(file_name,start_year,end_year):
     pd.options.display.max_colwidth = 12
     df = pd.read_csv(file_name)
     print("* -> Previewing input data:")
-    pprint(df.head())
+    print(df.head())
     print("* -> [INFO] No. of entries in input data file: %d" %df.shape[0])
     df_new = df[(df['Year'] >= start_year) & (df['Year'] <= end_year)]
 
     print("* -> [INFO] Drop entries outside of year range (%s - %s). New no. of entries: %d, entries dropped: %d" 
         %(start_year,end_year,df_new.shape[0],df.shape[0]-df_new.shape[0]))
-    pprint(df_new.head())
+    print(df_new.head())
 
     print("* -> Shuffle rows randomly: ")
     df_new = df_new.reindex(np.random.permutation(df_new.index))
-    pprint(df_new.head())
+    print(df_new.head())
 
     print("* -> Reset index:")
     df_new.reset_index(drop=True,inplace=True)
-    pprint(df_new.head())
+    print(df_new.head())
     return df_new
 
 def get_preprocess_summary(data,data_words,stopwords,data_words_nostops,data_words_ngrams,data_lemmatized,corpus,id2word,directory):

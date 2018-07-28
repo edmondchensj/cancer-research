@@ -6,21 +6,15 @@ import matplotlib.gridspec as gridspec
 import matplotlib.image as mpimg
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
-from itertools import product
-
-styling()
 
 def styling(): 
     plt.style.use('ggplot')
-    plt.rcParams['font.family'] = 'serif'
-    plt.rcParams['axes.facecolor']='#FDF6D8'
     plt.rcParams['axes.labelsize'] = 'small'
     plt.rcParams['axes.labelweight'] = 'bold'
     plt.rcParams['xtick.labelsize'] = 'xx-small'
     plt.rcParams['ytick.labelsize'] = 'xx-small'
     plt.rcParams['legend.fontsize'] = 'x-small'
     plt.rcParams['figure.autolayout'] = True # equiv to plt.tight_layout()
-    plt.rcParams['savefig.facecolor']='#FDF6D8'
     plt.rcParams['savefig.bbox'] = 'tight' # might be bbox_inches instead
     plt.rcParams['savefig.dpi'] = 1000
 
@@ -36,7 +30,7 @@ def initialize_grid(num_topics,gradient):
     fig = plt.figure(figsize=(row,col))
     if gradient and (math.ceil(num_topics/row) < row): # auto adjust to rectangle 
         col = col - 1
-        fig.set_size_inches(col,row)
+        fig.set_size_inches(col-0.7,row)
     gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
     return fig, gs, row, col
 
@@ -53,7 +47,7 @@ def get_dynamic_colors(data,cmap_relative):
         norm = Normalize(vmin=-bound, vmax=bound)
         color = 'RdYlGn'
     else:
-        norm = Normalize(vmin=min(data), vmax=max(data)+(max(data)/8))
+        norm = Normalize(vmin=min(data), vmax=max(data)+(max(data)/7))
         color = 'Oranges'
     cmap = cm.get_cmap(color)
     colors = list(map(lambda x: cmap(norm(x)), data))
@@ -81,23 +75,25 @@ def generate_wc_grid(num_topics,wordcloud_dir,target_dir,gradient=False,dynamic_
         if row == col:
             gs.update(left=0,right=0.92,wspace=-0.3)
         else:
-            gs.update(left=0,right=0.99,wspace=0.1)
-        cbar_ax = fig.add_axes([0.9,0.12,0.02,0.76])
-        sc = plt.gca().get_children()[0]
-        cbar = plt.colorbar(sc,cax=cbar_ax)
-        cbar.set_label('%s' %cbar_label,size='xx-small',labelpad=-0.05)
-        cbar.ax.tick_params(labelsize='xx-small',pad=-0.15)
+            gs.update(left=0,right=0.99,wspace=0)
+        cbar_ax = fig.add_axes([0.99,0.12,0.02,0.76])
+        sm.set_array([])
+        cbar = plt.colorbar(sm,cax=cbar_ax)
+        cbar.set_label('%s' %cbar_label,size='xx-small')
+        cbar.ax.tick_params(labelsize='xx-small')
 
-    figpath = _save_and_close(fig,f'{target_dir}/wordcloud_grid{'_'+tag}.png')
+    figpath = _save_and_close(fig,f'{target_dir}/wordcloud_grid{"_"+tag}.png')
     return figpath
 
 def gradientGrid(data,wordcloud_dir,target_dir,tag='',cmap_relative=False,cbar_label=False):
     print("* [wordcloudgrid.py] Now making wordcloud grid with color gradients ...")
+    styling()
     dynamic_color,sm = get_dynamic_colors(data,cmap_relative)
     figpath = generate_wc_grid(len(data),wordcloud_dir,target_dir,gradient=True,dynamic_color=dynamic_color,sm=sm,cbar_label=cbar_label,tag=tag)
     return figpath
 
 def basicGrid(num_topics,wordcloud_dir,target_dir):
     print("* [wordcloudgrid.py] Now visualizing model as wordcloud grid...")
+    styling()
     figpath = generate_wc_grid(num_topics,wordcloud_dir,target_dir)
     return figpath

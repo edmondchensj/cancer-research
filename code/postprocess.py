@@ -7,9 +7,8 @@ import pickle
 import gensim.corpora as corpora
 import os
 
-# My own helper scripts
-import wordcloudgrid as wcg
-import graphing as gr
+# My helper scripts
+import graphing_tools.graphing as gr
 
 ''' Load data '''
 def load_corpus(parent_dir):
@@ -110,8 +109,7 @@ def get_year_trend(df,num_topics,current_dir,topic_sensitivity,wordcloud_dir):
     gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=True)
 
 def _total_growth(year_trend):
-    func = lambda x: (x.values[-1] - x.values[0])/x.values[0]*100
-    return list(map(func,year_trend))
+    return list(map(lambda x: x.fillna(0).values[-1] - x.fillna(0).values[0],year_trend))
 
 def _trend(df,num_topics,topic_sensitivity,relative=False):
     year_trend = []
@@ -130,9 +128,9 @@ def most_cited_per_topic():
 def main():
     '''
     Next steps:
-    [To do] Clean code (1)
-    [To do] Highlight highest growth and lowest growth (make bold) (1h)
+    [To do] Include more stopwords?: gene, cancerous, molecular, target, receptor, expression, role, roles. 
     [To do] Make Venn. (1)
+    [To do] 
     [To do] Topic Mentions  - add y-axis for topic. container for title. 
     [x] Most cited in each topic, with score heatmap. (1.5h)
     [To do] Separate function for image containers (footnote,caption) (1h)

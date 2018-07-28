@@ -1,7 +1,5 @@
-import re
 import numpy as np
 import pandas as pd
-from pprint import pprint
 import pickle
 import time
 import gensim.corpora as corpora
@@ -22,8 +20,8 @@ from itertools import product
 from glob import iglob
 from PIL import Image
 
-# Own Code
-import wordcloudgrid
+# My helper script
+import graphing_tools.wordcloudgrid as wcg
 
 class colormap_size_func(object):
     """Color func created from matplotlib colormap. The larger the word, the darker the color. 
@@ -117,7 +115,7 @@ def main():
         current_dir = make_dir(parent_dir,model)
         get_pyLDAvis(model,corpus,id2word,current_dir)
         get_wordcloud(model,current_dir)
-        wordcloudgrid.basicGrid(num_topics,wordcloud_dir=current_dir,target_dir=current_dir)
+        wcg.basicGrid(num_topics,wordcloud_dir=current_dir,target_dir=current_dir)
 
 if __name__ == "__main__":
     main()
