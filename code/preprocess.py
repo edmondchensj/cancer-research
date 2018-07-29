@@ -34,20 +34,22 @@ def sentence_to_words(sentences):
         yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
     # yield is like return, but for "for" loops so that you get iterated results.
 
-def remove_stopwords(texts):
+def tokenize_and_remove_sw(texts):
     stop_words = stopwords.words('english')
     breastcancer_stopwords = ['breast','breasts','cancer','cancers','cancerous','woman','women','female','risk','risks','patient','patients',
     'screening','screen','screens','screenings','treatment','therapy','therapies','study','studies','research','diagnosis',
-    'management','disease','survive','survived','surviving','survival','survivor','survivors','stage','trial','trials','clinical','tumor','tumors',
-    'factor','factors','cell','cells']
-
-    additional_stopwords = ['molecular']
-    # The topic formed by molecular bio keywords (target,receptor,molecular) is mentioned in more than 90% of papers. 
-    molec_bio_stopwords = ['molecular','target','targets','receptor','receptors','role','roles','therapeutic']
+    'management','disease','diseases','survive','survived','surviving','survival','survivor','survivors','stage','trial','trials','clinical','tumor','tumors',
+    'tumour','tumours','factor','factors','cell','cells']
+    stopwords += breastcancer_stopwords
     
-    stop_words = stop_words + breastcancer_stopwords + molec_bio_stopwords
     texts_nostops = [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
     return texts_nostops, breastcancer_stopwords
+
+def remove_biomedical_sw(texts):
+    # Optional: remove this after lemmatizing so that any n-grams involving these terms are not affected. 
+    bm_stopwords = ['molecular','target','targets','receptor','receptors','role','roles','therapeutic']
+    texts_nostops = [[word for word in doc if word not in bm_stopwords] for doc in texts]
+    return texts_nostops, bm_stopwords
 
 def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     #https://spacy.io/api/annotation
@@ -105,6 +107,7 @@ def get_preprocess_summary(data,data_words,stopwords,data_words_nostops,data_wor
     f.write(str((data_words_ngrams[0])[:10]))
     f.write('\nLemmatize (e.g. recommended, recommends -> recommend):\n')
     f.write(str((data_lemmatized[0])[:10]))
+    f.write('\nRemove singular, common biomedical terms:')
     f.write('\n\nPhase 2: Build corpus for LDA modeling.\n')
     f.write('\nCorpus:\n')
     f.write(str((corpus[0])[:10]))
@@ -135,12 +138,14 @@ def main():
     data = df.Abstract.values.tolist()
     print('* -> Breaking down each abstract into list of words ...')
     data_words = list(sentence_to_words(data))
-    print('* -> Removing generic and cancer-specific stopwords ...')
-    data_words_nostops, breastcancer_stopwords = remove_stopwords(data_words)
+    print('* -> Tokenizing and removing basic stopwords ...')
+    data_words_nostops, breastcancer_stopwords = tokenize_and_remove_sw(data_words)
     print('* -> Forming Bi- and tri-grams (words that appear together might be a term e.g. false_positive')
     data_words_ngrams = make_ngrams(data_words_nostops)
     print('* -> Lemmatization i.e. keeping only noun, adj, vb, adv. Plural -> singular etc.')
     data_lemmatized = lemmatization(data_words_ngrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+    #print('* -> Removing singular, common biomedical stopwords ...')
+    #data_bm_sw = remove_biomedical_sw(data_lemmatized)
 
     print('\n* Now making relevant files for topic modeling ...')
     print('* -> Creating Dictionary')

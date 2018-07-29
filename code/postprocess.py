@@ -10,7 +10,7 @@ import os
 # My helper scripts
 import graphing_tools.graphing as gr
 
-''' Load data '''
+''' Preparation '''
 def load_corpus(parent_dir):
     return corpora.MmCorpus('%s/preprocess/corpus.mm'%parent_dir)
 
@@ -34,14 +34,13 @@ def load_models(parent_dir):
     return models
 
 def make_dir(parent_dir,model):
-    print("\n* Creating directory for this model ...")
+    print("\n* -> Creating directory for this model ...")
     parent_dir = '/'.join(parent_dir.split('/')[0:2])
     current_dir = '%s/postprocess/%stopics'%(parent_dir,model.num_topics)
     os.makedirs(current_dir, exist_ok=True)
     wordcloud_dir = '%s/visualize_models/%stopics'%(parent_dir,model.num_topics)
     return current_dir,wordcloud_dir
 
-''' Preparation '''
 def get_doc_topic_scores(model,corpus,df,directory):
     print("* -> Getting topic scores for documents ...")
     topic_cols = []
@@ -82,55 +81,59 @@ def most_representative_titles(model,df,directory):
     df_most_rep_titles.to_csv('%s/most_representative_titles.csv'%directory)
     return df_most_rep_titles
 
-def get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir):
+def get_topic_distribution(df,model,corpus,current_dir,threshold,wordcloud_dir):
     print('* -> Getting Topic Distribution (Mentions) ...')
-    topic_mentions = df[df>=topic_sensitivity].count()
+    topic_mentions = df[df>=threshold].count()
     topic_mentions = topic_mentions[[col for col in df.columns if 'Topic_' in col]]
     topic_mentions.to_csv('%s/topic_dist_mentions.csv'%current_dir)
+    gr.show_distribution(topic_mentions,model,corpus,current_dir,wordcloud_dir,dominant=False)
 
-    gr.show_distribution(topic_mentions,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,dominant=False)
+    #print('* -> Getting Topic Distribution (Dominant) ...')
+    #topic_dist = df['Dominant Topic'].value_counts()
+    #topic_dist = topic_dist.reindex(index=topic_cols).fillna(0)
+    #topic_dist.to_csv('%s/topic_dist_dominant.csv'%current_dir)
+    #gr.show_distribution(topic_dist,model,corpus,threshold,current_dir,wordcloud_dir,dominant=True)
 
-    print('* -> Getting Topic Distribution (Dominant) ...')
-    topic_dist = df['Dominant Topic'].value_counts()
-    topic_dist = topic_dist.reindex(index=topic_cols).fillna(0)
-    topic_dist.to_csv('%s/topic_dist_dominant.csv'%current_dir)
+    return topic_mentions
 
-    gr.show_distribution(topic_dist,model,corpus,topic_sensitivity,current_dir,wordcloud_dir,dominant=True)
-
-def get_year_trend(df,num_topics,current_dir,topic_sensitivity,wordcloud_dir):
+def get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir):
     print('* -> Getting Year Trends  ...')
 
     print('* - - > Get trend in terms of absolute papers  ...')
-    year_trend,total_growth = _trend(df,num_topics,topic_sensitivity,relative=False)
+    year_trend,total_growth = _trend(df,num_topics,threshold,relative=False)
     gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
 
     print('* - - > Get trend in terms of proportion of total papers ...')
-    year_trend,total_growth = _trend(df,num_topics,topic_sensitivity,relative=True)
+    year_trend,total_growth = _trend(df,num_topics,threshold,relative=True)
     gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=True)
+
+    return year_trend,total_growth
 
 def _total_growth(year_trend):
     return list(map(lambda x: x.fillna(0).values[-1] - x.fillna(0).values[0],year_trend))
 
-def _trend(df,num_topics,topic_sensitivity,relative=False):
+def _trend(df,num_topics,threshold,relative=False):
     year_trend = []
     papers_per_year = df.groupby('Year').size()
     for i in range(num_topics):
-        topic_mentions = df[df['Topic_%s'%(i+1)]>=topic_sensitivity].groupby('Year').size()
+        topic_mentions = df[df['Topic_%s'%(i+1)]>=threshold].groupby('Year').size()
         if relative:
             topic_mentions = topic_mentions/papers_per_year
         year_trend.append(topic_mentions)
     total_growth = _total_growth(year_trend)
     return year_trend, total_growth
 
-def most_cited_per_topic():
-    pass
+def get_venn(df,year_trend,total_growth,threshold,current_dir):
+    gr.venn_top3(df,year_trend,threshold,current_dir)
+    gr.venn_growth(df,year_trend,total_growth,threshold,current_dir)
+    gr.venn_top3(df,year_trend,0.25,current_dir)
+    gr.venn_growth(df,year_trend,total_growth,0.25,current_dir)
 
 def main():
     '''
     Next steps:
-    [To do] Include more stopwords?: gene, cancerous, molecular, target, receptor, expression, role, roles. 
     [To do] Make Venn. (1)
-    [To do] 
+    [To do] Then decide whether to preprocess more stopwords. Also whether to shift stopwords removal to the end. 
     [To do] Topic Mentions  - add y-axis for topic. container for title. 
     [x] Most cited in each topic, with score heatmap. (1.5h)
     [To do] Separate function for image containers (footnote,caption) (1h)
@@ -145,22 +148,26 @@ def main():
         print(f'\n* Now postprocessing for {num_topics} topics model ...')
 
         ''' To select models '''
-        if num_topics != 17:
+        if num_topics != 13:
             print('* --Skip-- ')
             continue
-
-        current_dir,wordcloud_dir = make_dir(parent_dir,model)
-        df = load_documents(parent_dir)
+        ''' Declare if model has been run before (default: False) '''
+        prev_run = True
 
         print('\n* Preparation step: ')
-        #df = get_doc_topic_scores(model,corpus,df,current_dir)
-        df = load_topic_scores(model,current_dir) # if topic_scores already retrieved. 
+        current_dir,wordcloud_dir = make_dir(parent_dir,model)
+        df = load_documents(parent_dir)
+        if not prev_run:
+            df = get_doc_topic_scores(model,corpus,df,current_dir)
+        else:
+            df = load_topic_scores(model,current_dir) # if topic_scores already retrieved. 
 
         print('\n* Output step: ')
-        topic_sensitivity = 0.05
-        #get_topic_distribution(df,model,corpus,current_dir,topic_sensitivity,wordcloud_dir)
-        get_year_trend(df,num_topics,current_dir,topic_sensitivity,wordcloud_dir)
-        #most_rep_titles = most_representative_titles(model,df,current_dir)
+        threshold = 0.10
+        topic_mentions = get_topic_distribution(df,model,corpus,current_dir,threshold,wordcloud_dir)
+        year_trend,total_growth = get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir)
+        get_venn(df,year_trend,total_growth,threshold,current_dir)
+        most_rep_titles = most_representative_titles(model,df,current_dir)
 
 if __name__ == "__main__":
     main()

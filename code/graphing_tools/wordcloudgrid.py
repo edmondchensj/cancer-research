@@ -27,10 +27,10 @@ def retrieve_wordclouds(wordcloud_dir):
 def initialize_grid(num_topics,gradient):
     row = math.ceil(math.sqrt(num_topics))
     col = row
-    fig = plt.figure(figsize=(row,col))
+    fig = plt.figure(figsize=(col-0.35,row))
     if gradient and (math.ceil(num_topics/row) < row): # auto adjust to rectangle 
         col = col - 1
-        fig.set_size_inches(col-0.7,row)
+        fig.set_size_inches(col-1,row)
     gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
     return fig, gs, row, col
 
@@ -74,13 +74,14 @@ def generate_wc_grid(num_topics,wordcloud_dir,target_dir,gradient=False,dynamic_
     if gradient: # Emphasize topics if gradient==True
         if row == col:
             gs.update(left=0,right=0.92,wspace=-0.3)
+            cbar_ax = fig.add_axes([0.915,0.12,0.02,0.76])
         else:
             gs.update(left=0,right=0.99,wspace=0)
-        cbar_ax = fig.add_axes([0.99,0.12,0.02,0.76])
+            cbar_ax = fig.add_axes([0.99,0.12,0.02,0.76])
         sm.set_array([])
         cbar = plt.colorbar(sm,cax=cbar_ax)
-        cbar.set_label('%s' %cbar_label,size='xx-small')
-        cbar.ax.tick_params(labelsize='xx-small')
+        cbar.set_label('%s' %cbar_label,size='xx-small',labelpad=0.2)
+        cbar.ax.tick_params(labelsize='xx-small',pad=0)
 
     figpath = _save_and_close(fig,f'{target_dir}/wordcloud_grid{"_"+tag}.png')
     return figpath
