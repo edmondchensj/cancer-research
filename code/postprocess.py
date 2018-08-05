@@ -81,28 +81,28 @@ def most_representative_titles(model,df,directory):
     df_most_rep_titles.to_csv('%s/most_representative_titles.csv'%directory)
     return df_most_rep_titles
 
-def get_topic_distribution(df,model,corpus,current_dir,threshold,wordcloud_dir):
+def get_topic_distribution(df,model,current_dir,threshold,wordcloud_dir):
 
-    topic_mentions = _topic_mentions(df,model,corpus,current_dir,threshold,wordcloud_dir)   
+    topic_mentions = _topic_mentions(df,model,current_dir,threshold,wordcloud_dir)   
 
-    #topic_dist = _topics_distrib(df,model,corpus,threshold,current_dir,wordcloud_dir,dominant=True)
+    #topic_dist = _topics_distrib(df,model,threshold,current_dir,wordcloud_dir,dominant=True)
 
     return topic_mentions
 
-def _topic_mentions():
+def _topic_mentions(df,model,current_dir,threshold,wordcloud_dir):
     print('* -> Getting Topic Distribution (Mentions) ...')
     topic_mentions = df[df>=threshold].count()
     topic_mentions = topic_mentions[[col for col in df.columns if 'Topic_' in col]]
     topic_mentions.to_csv('%s/topic_dist_mentions.csv'%current_dir)
-    gr.show_distribution(topic_mentions,model,corpus,current_dir,wordcloud_dir,dominant=False)
+    gr.show_distribution(topic_mentions,model,current_dir,wordcloud_dir,dominant=False)
     return topic_mentions
 
-def _topic_distrib(df,model,corpus,threshold,current_dir,wordcloud_dir):
+def _topic_distrib(df,model,threshold,current_dir,wordcloud_dir):
     print('* -> Getting Topic Distribution (Dominant) ...')
     topic_dist = df['Dominant Topic'].value_counts()
     topic_dist = topic_dist.reindex(index=topic_cols).fillna(0)
     topic_dist.to_csv('%s/topic_dist_dominant.csv'%current_dir)
-    gr.show_distribution(topic_dist,model,corpus,threshold,current_dir,wordcloud_dir,dominant=True)
+    gr.show_distribution(topic_dist,model,threshold,current_dir,wordcloud_dir,dominant=True)
     return topic_dist
 
 def get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir):
@@ -174,8 +174,8 @@ def main():
 
         print('\n* Output step: ')
         threshold = 0.10
-        #topic_mentions = get_topic_distribution(df,model,corpus,current_dir,threshold,wordcloud_dir)
-        year_trend,total_growth = get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir)
+        topic_mentions = get_topic_distribution(df,model,current_dir,threshold,wordcloud_dir)
+        #year_trend,total_growth = get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir)
         #get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir)
         #most_rep_titles = most_representative_titles(model,df,current_dir)
 

@@ -10,11 +10,22 @@ import colorcet as cc
 
 def set_plot_style(): 
     plt.style.use('ggplot')
+
+    # Background color (off-white; could consider pure white)
+    plt.rcParams['axes.facecolor'] = '#FDFDFD' 
+    plt.rcParams['axes.edgecolor'] = '#FDFDFD'
+    plt.rcParams['figure.facecolor'] = '#FDFDFD' 
+    plt.rcParams['savefig.facecolor'] = '#FDFDFD'
+
+    # Text
+    plt.rcParams['text.color'] = '#8F8F8F'  # color of topic number
     plt.rcParams['axes.labelsize'] = 'small'
     plt.rcParams['axes.labelweight'] = 'bold'
     plt.rcParams['xtick.labelsize'] = 'xx-small'
     plt.rcParams['ytick.labelsize'] = 'xx-small'
     plt.rcParams['legend.fontsize'] = 'x-small'
+
+    # Layout
     plt.rcParams['figure.autolayout'] = True # equiv to plt.tight_layout()
     plt.rcParams['savefig.bbox'] = 'tight' # might be bbox_inches instead
     plt.rcParams['savefig.dpi'] = 1000
@@ -46,13 +57,13 @@ def get_dynamic_colors(data,cmap_relative=False):
         color = cc.m_diverging_gwr_55_95_c38_r
     else:
         norm = Normalize(vmin=min(data), vmax=max(data)+(max(data)/7))
-        color = cc.m_fire
+        color = cc.m_fire_r
     cmap = cm.get_cmap(color)
     colors = list(map(lambda x: cmap(norm(x)), data))
     sm = plt.cm.ScalarMappable(cmap=cmap,norm=norm)
     return colors,sm
 
-def generate_wc_grid(fig,gs,num_topics,wordcloud_dir,target_dir,dynamic_color=None,sm=None,save=True,figpath=None):
+def get_wordcloud_grid(fig,gs,num_topics,wordcloud_dir,target_dir,dynamic_color=None,sm=None,save=True,figpath=None):
     images = retrieve_wordclouds(wordcloud_dir)
 
     for i in range(num_topics):
@@ -64,7 +75,7 @@ def generate_wc_grid(fig,gs,num_topics,wordcloud_dir,target_dir,dynamic_color=No
             else: ax.spines[pos].set_color('#E5E7E9')
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.annotate('%s'%(i+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small', color='gray')
+        ax.annotate('%s'%(i+1), xy=(0,0), xytext=(0.0175,0.875), textcoords='axes fraction',fontsize='x-small')
 
     figpath = _save_and_close(fig,f'{target_dir}/wordcloud_grid.png') if save else None
     return figpath
@@ -73,11 +84,11 @@ def gradientGrid(fig,gs,data,wordcloud_dir,target_dir,cmap_relative=False,cbar_l
     print("* [wordcloudgrid.py] Now making wordcloud grid with color gradients ...")
     set_plot_style()
     dynamic_color,sm = get_dynamic_colors(data,cmap_relative)
-    generate_wc_grid(fig,gs,len(data),wordcloud_dir,target_dir,dynamic_color=dynamic_color,sm=sm,cbar_label=cbar_label,save=False)
+    get_wordcloud_grid(fig,gs,len(data),wordcloud_dir,target_dir,dynamic_color=dynamic_color,sm=sm,cbar_label=cbar_label,save=False)
 
 def basicGrid(num_topics,wordcloud_dir,target_dir):
     print("* [wordcloudgrid.py] Now visualizing model as wordcloud grid...")
     set_plot_style()
     fig, gs = initialize_grid(num_topics)
-    figpath = generate_wc_grid(fig,gs,num_topics,wordcloud_dir,target_dir)
+    figpath = get_wordcloud_grid(fig,gs,num_topics,wordcloud_dir,target_dir)
     return figpath
