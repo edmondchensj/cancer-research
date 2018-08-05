@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import math
+import pickle
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -15,6 +16,7 @@ import graphing_tools.wordcloudgrid as wcg
     2. Distribution
     3. Trend
     4. Venn
+    5. Coherence Graph
 '''
 
 # 1. General Plotting
@@ -28,9 +30,10 @@ def set_plot_style():
     plt.rcParams['savefig.facecolor'] = '#FDFDFD'
 
     # Text
-    plt.rcParams['text.color'] = '#4C4C4B'
-    plt.rcParams['axes.labelsize'] = 'small'
-    plt.rcParams['axes.labelweight'] = 'bold'
+    plt.rcParams['text.color'] = '#666666'
+    plt.rcParams['font.size'] = 9
+    plt.rcParams['axes.labelsize'] = 'x-small'
+    plt.rcParams['axes.labelcolor'] = '#8F8F8F'
     plt.rcParams['xtick.color'] = '#8F8F8F'
     plt.rcParams['xtick.labelsize'] = 'xx-small'
     plt.rcParams['ytick.color'] = '#8F8F8F'
@@ -48,16 +51,19 @@ def set_plot_style():
     plt.rcParams['savefig.bbox'] = 'tight' # might be bbox_inches instead
     plt.rcParams['savefig.dpi'] = 750
 
-def _make_plot(num_topics):
+def _make_plot(num_topics,narrow=False):
     set_plot_style()
-    fig = plt.figure(figsize=(7,6))
+    fig = plt.figure(figsize=(6,4.8))
     gs1 = gridspec.GridSpec(1,1)
-    gs1.update(left=0,right=0.45)
+    if narrow: # for topic distribution. shift chart to the right and make more narrow. 
+        gs1.update(left=0.15,right=0.55) # width=0.4
+    else:
+        gs1.update(left=0.04,right=0.48) # width=0.44
 
     col = math.floor(math.sqrt(num_topics))
     row = math.ceil(num_topics/col)
     gs2 = gridspec.GridSpec(row,col,wspace=0.02,hspace=0.03)
-    gs2.update(left=0.58,right=0.98)
+    gs2.update(left=0.61,right=0.98)
     return fig,gs1,gs2
 
 def _save_and_close(fig,figpath):
@@ -78,7 +84,7 @@ def _make_colorbar(fig,sm,cbar_label):
 # 2. Distribution
 def show_distribution(data,model,current_dir,wordcloud_dir,dominant=False):
     num_topics = model.num_topics
-    fig,gs1,gs2 = _make_plot(num_topics)
+    fig,gs1,gs2 = _make_plot(num_topics,narrow=True)
     dynamic_color,sm = wcg.get_dynamic_colors(data,cmap_relative=False)
 
     _plot_graph(gs1,data,_topic_keywords(model),current_dir)
@@ -144,7 +150,7 @@ def _plot_trend(gs,year_trend,total_growth,colors,relative=False):
             ax.plot(x,y,color=colors[i],zorder=1)
             ax.annotate(f'Topic {i+1}',xy=(ann_x,ann_y),fontsize='x-small',zorder=3)
 
-    ax.xaxis.set_ticks(list(year_trend[0].index)[::2])
+    ax.xaxis.set_ticks(list(year_trend[0].index)[::4])
     ax.tick_params(axis=u'both', which=u'both',length=0) # remove tick marks.
     ax.set_xlabel("Year")
     ax.set_ylabel('Proportion of Papers' if relative else 'Number of Papers')
@@ -241,3 +247,33 @@ def _show_venn(df,topicA,topicB,topicC,threshold,current_dir,wordcloud_dir,tag='
     fig.text(0.5,0,f'Threshold: {threshold}',ha='center',fontsize='15')
     figpath = _save_and_close(fig,f'{current_dir}/venn_{threshold}_{tag}.png')
     return figpath
+
+
+# 5. Coherence Graph
+def show_coherence_graph(model_dir):
+    print("\n* Showing coherence graph ...")
+    coherence_values,num_topics_range = _load_cv_ntr(model_dir)
+    set_plot_style()
+    fig = plt.figure(figsize=(4,3))
+    ax = plt.subplot()
+    x = num_topics_range
+
+    for i in range(len(coherence_values)):
+        ax.plot(x,coherence_values[i],color='#C5C5C5',linewidth=0.5,zorder=1)    # edit
+    avg_coherence = np.mean(np.array(coherence_values),axis=0)
+    ax.plot(x,avg_coherence,color='purple',zorder=2)    # edit
+
+    ax.xaxis.set_ticks(list(num_topics_range)[::2])
+    ax.set_xlabel("Number of Topics")
+    ax.set_ylabel("Coherence Score")
+    ax.tick_params(axis=u'both', which=u'both',length=0) # remove tick marks.
+    fig.text(0.1,0,f'The bold line shows the average scores from {len(coherence_values)} runs of Topic Modeling.',size='xx-small')
+    fig.savefig(f'{model_dir}/coherence_graph.png')
+    print('* Coherence graph saved.')
+
+def _load_cv_ntr(model_dir):
+    with open(f'{model_dir}/cv.pkl','rb') as f:
+        coherence_values = pickle.load(f)
+    with open(f'{model_dir}/num_topic_range.pkl','rb') as f:
+        num_topics_range = pickle.load(f)
+    return coherence_values,num_topics_range

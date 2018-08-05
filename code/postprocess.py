@@ -143,7 +143,6 @@ def get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir):
 def main():
     '''
     Next steps:
-    [To do] Style topic mentions
     [To do] Style coherence graph (20) Then run model again. (15)
     [To do] Add another criteria for topic distribution -> at least 10 pubmed intra citations. 
     [To do] Footnotes to explain data source, thresholds, special graph related comments. (30)
@@ -175,7 +174,7 @@ def main():
         print('\n* Output step: ')
         threshold = 0.10
         topic_mentions = get_topic_distribution(df,model,current_dir,threshold,wordcloud_dir)
-        #year_trend,total_growth = get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir)
+        year_trend,total_growth = get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir)
         #get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir)
         #most_rep_titles = most_representative_titles(model,df,current_dir)
 

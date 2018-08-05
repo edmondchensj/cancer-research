@@ -20,55 +20,9 @@ from itertools import product
 from glob import iglob
 from PIL import Image
 
-# My helper script
+# Customized Graphing Tool
+import graphing_tools.graphing as gr
 import graphing_tools.wordcloudgrid as wcg
-
-class colormap_size_func(object):
-    """Color func created from matplotlib colormap. The larger the word, the darker the color. 
-    Parameters
-    ----------
-    colormap : string or matplotlib colormap
-        Colormap to sample from
-    Example
-    -------
-    >>> WordCloud(color_func=colormap_color_func("magma"))
-    """
-    def __init__(self, colormap, max_font_size):
-        import matplotlib.pyplot as plt
-        self.colormap = plt.cm.get_cmap(colormap)
-        self.max_font_size = max_font_size
-
-    def __call__(self, word, font_size, position, orientation,
-                 random_state=None, **kwargs):
-        if random_state is None:
-            random_state = Random()
-        r, g, b, _ = 255 * np.array(self.colormap(font_size / self.max_font_size))
-        return "rgb({:.0f}, {:.0f}, {:.0f})".format(r, g, b)
-
-def get_wordcloud(model,current_dir):
-    print("\n* Now creating wordclouds...")
-    from PIL import Image
-    icon_path = "helper_files/circle.png"
-    icon = Image.open(icon_path)
-    mask = Image.new("RGB", icon.size, (255,255,255))
-    mask.paste(icon,icon)
-    mask = np.array(mask)
-
-    for t in range(model.num_topics):
-        words = dict(model.show_topic(t, 15))
-        wc = WordCloud(font_path='/Library/Fonts/HelveticaNeue.dfont', 
-                       mask=mask,
-                       prefer_horizontal=0.95,
-                       relative_scaling=0.4,
-                       background_color="white",
-                       max_font_size=500,
-                       color_func=colormap_size_func("Blues",500))
-        plt.style.use('seaborn-notebook')
-        plt.imshow(wc.generate_from_frequencies(words))
-        plt.axis("off")
-        imsave('%s/wordcloud_topic%s.png'%(current_dir,t+1), wc.generate_from_frequencies(words))
-        #plt.title("Topic #" + str(t+1))
-    print("Wordclouds saved.")
         
 def get_pyLDAvis(model,corpus,id2word,current_dir):
     print("\n* Now we will visualize the topics using pyLDAvis.")
@@ -87,8 +41,8 @@ def load_preprocess_data(parent_dir):
     id2word = np.load('%s/preprocess/id2word.dict' %parent_dir)
     return corpus,id2word
 
-def load_models(parent_dir):
-    lst = os.listdir(parent_dir+'/models')
+def load_models(model_dir):
+    lst = os.listdir(model_dir)
     model_lst = filter(lambda m: 'model' in m, lst)
     models = []
     for model_file in model_lst:
@@ -96,26 +50,34 @@ def load_models(parent_dir):
             models.append(pickle.load(f))
     return models
 
-def main():
-    parent_dir = 'saved_files/1997_to_2017'
-
-    corpus,id2word = load_preprocess_data(parent_dir)
-    models = load_models(parent_dir)
-
+def visualize_models(models,parent_dir,corpus,id2word,selected_models=None):
     for model in models:
         # Select models to run. 
         num_topics = model.num_topics
         print(f'\n* Now visualizing for {num_topics} topics model ...')
 
         ''' To select models '''
-        if not num_topics in [13,15,17]:
-            print('* --Skip-- ')
-            continue
+        if selected_models is not None:
+            if num_topics not in selected_models:
+                print('* --Skip-- ')
+                continue
 
         current_dir = make_dir(parent_dir,model)
         get_pyLDAvis(model,corpus,id2word,current_dir)
-        get_wordcloud(model,current_dir)
+        wcg.get_wordclouds(model,current_dir)
         wcg.basicGrid(num_topics,wordcloud_dir=current_dir,target_dir=current_dir)
 
+def main():
+    parent_dir = 'saved_files/1997_to_2017'
+    model_dir = parent_dir + '/models'
+
+    # Part I: Show Coherence Graph
+    gr.show_coherence_graph(model_dir)
+
+    # Part II: Visualize Selected Models
+    #corpus,id2word = load_preprocess_data(parent_dir)
+    #models = load_models(model_dir)
+    #visualize_models(models,parent_dir,corpus,id2word,selected_models=[13,15,17])
+   
 if __name__ == "__main__":
     main()

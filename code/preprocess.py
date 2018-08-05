@@ -17,6 +17,13 @@ import time
 
 # This code is built on the tutorial from: https://www.machinelearningplus.com/nlp/topic-modeling-gensim-python/
 
+''' Table of Contents
+    1. Basic helper functions
+    2. Preprocessing functions
+    3. Main function
+'''
+
+# 1. Basic helper functions
 def save_for_later(corpus,id2word,texts,df,directory):
     id2word.save('%s/id2word.dict' %directory)
     corpora.MmCorpus.serialize('%s/corpus.mm' %directory, corpus)
@@ -24,15 +31,10 @@ def save_for_later(corpus,id2word,texts,df,directory):
         pickle.dump(texts, f)
     df.to_csv('%s/breastcancer_reviews_refined.csv' %directory)
 
-def get_stopwords():
-    from nltk.corpus import stopwords
-    stop_words = stopwords.words('english')
-    return stop_words
-
 def sentence_to_words(sentences):
     for sentence in sentences:
-        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
-    # yield is like return, but for "for" loops so that you get iterated results.
+        yield(simple_preprocess(str(sentence), deacc=False))
+    # yield is like return, but used in "for" loops so that you get iterated results.
 
 def tokenize_and_remove_sw(texts):
     stop_words = stopwords.words('english')
@@ -45,6 +47,13 @@ def tokenize_and_remove_sw(texts):
     texts_nostops = [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
     return texts_nostops, breastcancer_stopwords
 
+def tokenize(texts):
+    return [simple_preprocess(str(doc)) for doc in texts]
+
+def remove_stopwords(texts):
+    std_stopwords = stopwords.words('english')
+    breastcancer_l1 = ['breast','cancer','woman','female','risk','patient','study','research','disease','survive','stage','trial','clinical','tumor','factor','cell']
+    breastcancer_l2 = ['screening','treatment','therapy','diagnosis','role']
 def remove_biomedical_sw(texts):
     # Optional: remove this after lemmatizing so that any n-grams involving these terms are not affected. 
     bm_stopwords = ['molecular','target','targets','receptor','receptors','role','roles','therapeutic']
@@ -134,10 +143,10 @@ def main():
     df = refine_data(file_name,start_year,end_year)
 
     print('\n* Now running preprocessing ...')
-    print('* -> Getting abstracts in a list ...')
     data = df.Abstract.values.tolist()
-    print('* -> Breaking down each abstract into list of words ...')
+
     data_words = list(sentence_to_words(data))
+
     print('* -> Tokenizing and removing basic stopwords ...')
     data_words_nostops, breastcancer_stopwords = tokenize_and_remove_sw(data_words)
     print('* -> Forming Bi- and tri-grams (words that appear together might be a term e.g. false_positive')
