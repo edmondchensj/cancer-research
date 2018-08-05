@@ -9,44 +9,19 @@ from matplotlib.offsetbox import (OffsetImage,AnnotationBbox)
 from matplotlib_venn import venn3, venn3_circles
 import graphing_tools.wordcloudgrid as wcg
 
-''' Table of Contents:
-    
-    1. General Plotting
-    2. Venn Diagram
-    3. Trend
-    4. Distribution
-'''
-
-# 1. General Plotting
-def set_plot_style(): 
+def styling(): 
     plt.style.use('ggplot')
-
-    # Background colors
-    plt.rcParams['axes.facecolor'] = '#FDFDFD' ##EBEBEB
-    plt.rcParams['axes.edgecolor'] = '#FDFDFD'
-    plt.rcParams['figure.facecolor'] = '#FDFDFD' # off white background. 
-    plt.rcParams['savefig.facecolor'] = '#FDFDFD'
-
-    # Text
-    plt.rcParams['text.color'] = '#4C4C4B'
+    plt.rcParams['axes.facecolor']='#EBEDEF' ##EBEBEB
     plt.rcParams['axes.labelsize'] = 'small'
     plt.rcParams['axes.labelweight'] = 'bold'
-    plt.rcParams['xtick.color'] = '#8F8F8F'
+    plt.rcParams['text.color'] = '#4C4C4B'
+    plt.rcParams['axes.grid'] = False
     plt.rcParams['xtick.labelsize'] = 'xx-small'
-    plt.rcParams['ytick.color'] = '#8F8F8F'
     plt.rcParams['ytick.labelsize'] = 'xx-small'
     plt.rcParams['legend.fontsize'] = 'x-small'
-
-    # Grid
-    plt.rcParams['axes.grid'] = True
-    plt.rcParams['grid.color'] = '#EBEBEB'
-    plt.rcParams['grid.linewidth'] = 0.5
-    plt.rcParams['grid.alpha'] = 0.75
-
-    # Layout
     plt.rcParams['figure.autolayout'] = True # equiv to plt.tight_layout()
     plt.rcParams['savefig.bbox'] = 'tight' # might be bbox_inches instead
-    plt.rcParams['savefig.dpi'] = 750
+    plt.rcParams['savefig.dpi'] = 1000
 
 def _init_plot(custom=None):
     fig = plt.figure(figsize=(6,5))
@@ -59,23 +34,9 @@ def _save_and_close(fig,figpath):
     print(f'* [graphing.py] File saved: {figpath}.')
     return figpath
 
-
-# 2. Venn Diagram
-def venn_top3(df,year_trend,threshold,current_dir,wordcloud_dir):
-    print('* - - > Getting Venn for top 3 topics (based on year 2017)')
-    top3 = _highest_absolute(year_trend,n=3)
-    figpath = _show_venn(df,top3[0]+1,top3[1]+1,top3[2]+1,threshold,current_dir,wordcloud_dir,tag='top3') #Note: List index trails topic index by one.
-    return figpath
-
-def venn_growth(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir):
-    print('* - - > Getting Venn to compare (i) highest absolute (ii) highest growth (iii) lowest growth')
-    _,_,[high_idx,low_idx] = _high_low_growth(total_growth)
-    top1 = _highest_absolute(year_trend,n=1,avoid=[high_idx,low_idx])
-    figpath = _show_venn(df,top1[0]+1,high_idx+1,low_idx+1,threshold,current_dir,wordcloud_dir,tag='growth') #Note: List index trails topic index by one.
-    return figpath
-
+''' Venn Diagram '''
 def merge_two_venns(venn1_path,venn2_path,current_dir):
-    set_plot_style()
+    styling()
     fig = plt.figure(figsize=(7,3))
     ax1 = fig.add_axes([0,0,0.5,1])
     ax2 = fig.add_axes([0.5,0,0.5,1])
@@ -113,7 +74,7 @@ def _nan_to_zeros(subsets):
     return list(map(lambda x: 0 if math.isnan(x) else x,subsets))
 
 def _show_venn(df,topicA,topicB,topicC,threshold,current_dir,wordcloud_dir,tag=''):
-    set_plot_style()
+    styling()
     conditions = _venn_conditions(df,topicA,topicB,topicC,threshold)
     subsets = [df[c].shape[0] for c in conditions]
     s = _nan_to_zeros(subsets)
@@ -125,66 +86,42 @@ def _show_venn(df,topicA,topicB,topicC,threshold,current_dir,wordcloud_dir,tag='
     figpath = _save_and_close(fig,f'{current_dir}/venn_{threshold}_{tag}.png')
     return figpath
 
-
-# 3. Trend
-def show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False):
-    set_plot_style()
-
-    # Plot chart
-    fig = plt.figure(figsize=(7,6))
-    gs1 = gridspec.GridSpec(1,1)
-    gs1.update(left=0,right=0.45)
-    ax1 = plt.subplot(gs1[0])
-    ax1 = _plot_trend(ax1,year_trend,total_growth,relative)
-
-    # Plot wordclouds
-    num_topics = len(year_trend)
-    col = math.floor(math.sqrt(num_topics))
-    row = math.ceil(num_topics/col)
-    gs2 = gridspec.GridSpec(row,col,wspace=0.02,hspace=0.03)
-    gs2.update(left=0.58,right=0.98)
-    dynamic_color,sm = wcg.get_dynamic_colors(total_growth,cmap_relative=relative)
-    wcg.generate_wc_grid(fig,gs2,num_topics,wordcloud_dir,current_dir,dynamic_color=dynamic_color,sm=sm,save=False)
-
-    # Plot colorbar
-    cbar_ax = fig.add_axes([0.995,0.1,0.013,0.77])
-    sm.set_array([])
-    cbar = plt.colorbar(sm,cax=cbar_ax)
-    cbar.set_label('Total Growth',labelpad=0.3)
-    cbar.ax.tick_params(size=0)
-    cbar.outline.set_visible(False)
-
-    figpath = _save_and_close(fig,f'{current_dir}/topic_trend{"_rel" if relative else "_abs"}.png')
+def venn_top3(df,year_trend,threshold,current_dir,wordcloud_dir):
+    print('* - - > Getting Venn for top 3 topics (based on year 2017)')
+    top3 = _highest_absolute(year_trend,n=3)
+    figpath = _show_venn(df,top3[0]+1,top3[1]+1,top3[2]+1,threshold,current_dir,wordcloud_dir,tag='top3') #Note: List index trails topic index by one.
     return figpath
 
-def _plot_trend(ax,year_trend,total_growth,relative=False):
-    colors,__ = wcg.get_dynamic_colors(total_growth,cmap_relative=relative)
+def venn_growth(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir):
+    print('* - - > Getting Venn to compare (i) highest absolute (ii) highest growth (iii) lowest growth')
+    _,_,[high_idx,low_idx] = _high_low_growth(total_growth)
+    top1 = _highest_absolute(year_trend,n=1,avoid=[high_idx,low_idx])
+    figpath = _show_venn(df,top1[0]+1,high_idx+1,low_idx+1,threshold,current_dir,wordcloud_dir,tag='growth') #Note: List index trails topic index by one.
+    return figpath
 
-    high_growth,low_growth,hlg = _high_low_growth(total_growth)
-    topn = _highest_absolute(year_trend,n=5)
-    ann_list = []
+''' Trends '''
+# Make plot that aligns chart and wcg. 
+def make_chart_and_wcgrid():
+    fig = plt.figure(figsize=(8,4))
+    gs1 = gridspec.GridSpec(1,1)
+    gs1.update(left=0.05,right=0.48)
+    ax1 = plt.subplot(gs1[0])
 
-    for i in range(len(year_trend)): # we can get number of topics via len(year_trend).
-        x,y = year_trend[i].index, year_trend[i]
-        if i not in (hlg+topn):
-            ax.plot(x,y,color=colors[i],zorder=1)
-            continue
+    gs2 = gridspec.GridSpec()
 
-        ann_x,ann_y = _auto_adjust(ann_list,x,y)
-        if i in hlg:
-            ax.plot(x,y,color=colors[i],linewidth=2.5,zorder=2)
-            growth = high_growth if i==hlg[0] else low_growth
-            growth = f'{growth:+.2f}' if relative else f'{growth:+d}'
-            ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='x-small',fontweight='bold',zorder=3)
-        elif i in topn:
-            ax.plot(x,y,color=colors[i],zorder=1)
-            ax.annotate(f'Topic {i+1}',xy=(ann_x,ann_y),fontsize='x-small',zorder=3)
 
-    ax.xaxis.set_ticks(list(year_trend[0].index)[::2])
-    ax.tick_params(axis=u'both', which=u'both',length=0) # remove tick marks.
-    ax.set_xlabel("Year")
-    ax.set_ylabel('Proportion of Papers' if relative else 'Number of Papers')
-    return ax
+
+def show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False):
+    styling()
+    tag = f'trend_{"rel" if relative else "abs"}'
+    graph = _plot_trend(year_trend,total_growth,current_dir,relative)
+    wcgrid = wcg.gradientGrid(total_growth,
+                            wordcloud_dir,
+                            current_dir,
+                            tag=tag,
+                            cmap_relative=relative,
+                            cbar_label='Total Growth')
+    _merge_graph_wcgrid(graph,wcgrid,current_dir,tag=tag)
 
 def _high_low_growth(total_growth):
     high_growth,high_idx = max([(v,i) for i,v in enumerate(total_growth)])
@@ -213,10 +150,40 @@ def _auto_adjust(ann_list,x,y):
     ann_list.append(ann_y)
     return ann_x,ann_y
 
+def _plot_trend(year_trend,total_growth,current_dir,relative=False):
+    fig,ax = _init_plot()
+    colors,__ = wcg.get_dynamic_colors(total_growth,cmap_relative=relative)
 
-# 4. Distribution
+    high_growth,low_growth,hlg = _high_low_growth(total_growth)
+    topn = _highest_absolute(year_trend,n=5)
+    ann_list = []
+
+    for i in range(len(year_trend)):
+        x,y = year_trend[i].index, year_trend[i]
+        if i not in (hlg+topn):
+            ax.plot(x,y,color=colors[i],zorder=1)
+            continue
+
+        ann_x,ann_y = _auto_adjust(ann_list,x,y)
+        if i in hlg:
+            ax.plot(x,y,color=colors[i],linewidth=2.5,zorder=2)
+            growth = high_growth if i==hlg[0] else low_growth
+            growth = f'{growth:+.2f}' if relative else f'{growth:+d}'
+            ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='x-small',fontweight='bold',zorder=3)
+        elif i in topn:
+            ax.plot(x,y,color=colors[i],zorder=1)
+            ax.annotate(f'Topic {i+1}',xy=(ann_x,ann_y),fontsize='x-small',zorder=3)
+
+    ax.xaxis.set_ticks(list(year_trend[0].index)[::2])
+    ax.set_xlabel("Year")
+    ax.set_ylabel('Proportion of Papers' if relative else 'Number of Papers')
+    fig.savefig(f'{current_dir}/topic_trend{"_rel" if relative else "_abs"}.png')
+    figpath = _save_and_close(fig,f'{current_dir}/topic_trend{"_rel" if relative else "_abs"}.png')
+    return figpath
+
+''' Distributions '''
 def show_distribution(data,model,corpus,current_dir,wordcloud_dir,dominant=False):
-    set_plot_style()
+    styling()
     tag = 'dominant' if dominant else 'mention'
     graph = _plot_graph(data,
                         _topic_keywords(model,corpus),
@@ -248,9 +215,9 @@ def _plot_graph(data,topic_keywords,current_dir,tag):
     figpath = _save_and_close(fig,f'{current_dir}/topic_{tag}.png')
     return figpath
 
-# Merge with Wordcloud Grid (Retired)
+''' Merge with Wordcloud Grid '''
 def _merge_graph_wcgrid(graph,wcgrid,current_dir,tag):
-    set_plot_style()
+    styling()
     print('* - - -> Merging graph and wordcloud grid')
     fig = plt.figure(figsize=(12,6))
     if 'trend' in tag: # allow space for annotations in trend graph
