@@ -53,7 +53,7 @@ def set_plot_style():
 
 def _make_plot(num_topics,narrow=False):
     set_plot_style()
-    fig = plt.figure(figsize=(7,5))
+    fig = plt.figure(figsize=(6,4.25))
     gs1 = gridspec.GridSpec(1,1)
     if narrow: # for topic distribution. shift chart to the right and make more narrow. 
         gs1.update(left=0.08,right=0.48) # width=0.4
@@ -82,16 +82,18 @@ def _make_colorbar(fig,sm,cbar_label):
     cbar.outline.set_visible(False)
 
 def _set_title_footnote(fig,plot):
-    fig.text(-0.05,0.945,_title()[plot],size='x-large',color='#2D2D2D')
-    fig.text(-0.05,-0.025,f'{_footnote()["std"]}',size='xx-small')
+    fig.text(-0.02,0.945,_title()[plot],size='x-large',color='#101010')
+    fig.text(-0.02,-0.025,f'{_footnote()["std"]}',size='xx-small')
 
 def _title():
-    return {'topic_mention':'What topics are most prevalent in breast cancer research?',
-            'trend_rel':'What topics gained popularity in the past 20 years?'}
+    return {'topic_mention':'What topics in breast cancer research ...'
+                            '\n                 ... were most prevalent in the past 20 years?',
+            'trend_rel':'What topics in breast cancer research ...'
+                            '\n                 ... gained the most popularity in the past 20 years?'}
 
 def _footnote():
     return {'std':'Based on a minimum topic contribution of 10%, by Latent Dirichlet Allocation (LDA).'
-            '\nData Source: 12,951 review paper abstracts with keyword "breast cancer",'
+            '\nData Source: Abstracts from 12,951 review papers with keyword "breast cancer",'
             ' published between 1997 to 2017. Retrieved from PubMed.'
             '\nTopic Modeling algorithm: LDA with Term Frequency-Inverse Document Frequency (TFIDF).'}
 # 2. Distribution
@@ -160,7 +162,7 @@ def _plot_trend(gs,year_trend,total_growth,colors,relative=False):
             ax.plot(x,y,color=colors[i],linewidth=2.5,zorder=2)
             growth = high_growth if i==hlg[0] else low_growth
             growth = f'{growth:+.1f}%' if relative else f'{growth:+.0f}%'
-            ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='xx-small',fontweight='bold',zorder=3)
+            ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='x-small',fontweight='bold',zorder=3)
         elif i in topn:
             ax.plot(x,y,color=colors[i],zorder=1)
             ax.annotate(f'Topic {i+1}',xy=(ann_x,ann_y),fontsize='xx-small',zorder=3)
@@ -187,7 +189,7 @@ def _auto_adjust(ann_list,x,y):
     if ann_list:
         nearest = (np.abs(np.asarray(ann_list) - ann_y)).argmin()
         distance = ann_y - ann_list[nearest]
-        min_pad = 0.01
+        min_pad = 0.018
         if abs(distance) < min_pad:
             pad = min_pad-abs(distance)
             if (distance > 0): # shift up
