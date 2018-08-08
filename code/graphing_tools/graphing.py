@@ -56,14 +56,15 @@ def _make_plot(num_topics,narrow=False):
     fig = plt.figure(figsize=(6,4.8))
     gs1 = gridspec.GridSpec(1,1)
     if narrow: # for topic distribution. shift chart to the right and make more narrow. 
-        gs1.update(left=0.15,right=0.55) # width=0.4
+        gs1.update(left=0.1,right=0.5) # width=0.4
     else:
-        gs1.update(left=0.04,right=0.48) # width=0.44
+        gs1.update(left=0,right=0.44) # width=0.44
 
     col = math.floor(math.sqrt(num_topics))
     row = math.ceil(num_topics/col)
-    gs2 = gridspec.GridSpec(row,col,wspace=0.02,hspace=0.03)
-    gs2.update(left=0.61,right=0.98)
+    width = math.sqrt(col/row)*0.47
+    gs2 = gridspec.GridSpec(row,col,wspace=0.02,hspace=0.02)
+    gs2.update(left=0.98-width,right=0.98) # width=0.38
     return fig,gs1,gs2
 
 def _save_and_close(fig,figpath):
@@ -73,7 +74,7 @@ def _save_and_close(fig,figpath):
     return figpath
 
 def _make_colorbar(fig,sm,cbar_label):
-    cbar_ax = fig.add_axes([0.995,0.1,0.013,0.77])
+    cbar_ax = fig.add_axes([0.99,0.1,0.01,0.77])
     sm.set_array([])
     cbar = plt.colorbar(sm,cax=cbar_ax)
     cbar.set_label(cbar_label)
@@ -145,10 +146,10 @@ def _plot_trend(gs,year_trend,total_growth,colors,relative=False):
             ax.plot(x,y,color=colors[i],linewidth=2.5,zorder=2)
             growth = high_growth if i==hlg[0] else low_growth
             growth = f'{growth:+.2f}' if relative else f'{growth:+d}'
-            ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='x-small',fontweight='bold',zorder=3)
+            ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='xx-small',fontweight='bold',zorder=3)
         elif i in topn:
             ax.plot(x,y,color=colors[i],zorder=1)
-            ax.annotate(f'Topic {i+1}',xy=(ann_x,ann_y),fontsize='x-small',zorder=3)
+            ax.annotate(f'Topic {i+1}',xy=(ann_x,ann_y),fontsize='xx-small',zorder=3)
 
     ax.xaxis.set_ticks(list(year_trend[0].index)[::4])
     ax.tick_params(axis=u'both', which=u'both',length=0) # remove tick marks.
@@ -172,7 +173,7 @@ def _auto_adjust(ann_list,x,y):
     if ann_list:
         nearest = (np.abs(np.asarray(ann_list) - ann_y)).argmin()
         distance = ann_y - ann_list[nearest]
-        min_pad = 0.04
+        min_pad = 0.01
         if abs(distance) < min_pad:
             pad = min_pad-abs(distance)
             if (distance > 0): # shift up
@@ -261,7 +262,7 @@ def show_coherence_graph(model_dir):
     for i in range(len(coherence_values)):
         ax.plot(x,coherence_values[i],color='#C5C5C5',linewidth=0.5,zorder=1)    # edit
     avg_coherence = np.mean(np.array(coherence_values),axis=0)
-    ax.plot(x,avg_coherence,color='purple',zorder=2)    # edit
+    ax.plot(x,avg_coherence,linewidth=1.75,zorder=2)    # edit color
 
     ax.xaxis.set_ticks(list(num_topics_range)[::2])
     ax.set_xlabel("Number of Topics")

@@ -7,6 +7,10 @@ import matplotlib.image as mpimg
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 import colorcet as cc
+from wordcloud import WordCloud
+from PIL import Image
+#from scipy.misc import imsave #deprecated
+#import imageio.imwrite as imsave #does not work
 
 ''' Table of Contents:
     1   Plot Style
@@ -37,6 +41,11 @@ def set_plot_style():
     plt.rcParams['savefig.bbox'] = 'tight' # might be bbox_inches instead
     plt.rcParams['savefig.dpi'] = 1000
 
+def cmap_style():
+    return {'wordcloud':cc.m_dimgray_r,
+            'diverging':cc.m_diverging_gwr_55_95_c38_r,
+            'linear':cc.m_linear_blue_95_50_c20}
+    # other options: cc.m_linear_grey_10_95_c0_r,'viridis_r',cc.m_linear_blue_95_50_c20,'Blues',cc.m_diverging_gwr_55_95_c38_r
 
 # 2     Make wordclouds
 class colormap_size_func(object):
@@ -73,17 +82,17 @@ def get_wordclouds(model,current_dir):
 
     for t in range(model.num_topics):
         words = dict(model.show_topic(t, 15))
-        wc = WordCloud(font_path='/Library/Fonts/HelveticaNeue.dfont', 
+        wc = WordCloud(font_path='/Library/Fonts/Helvetica.dfont', # or HelveticaNeue
                        mask=mask,
                        prefer_horizontal=0.95,
                        relative_scaling=0.4,
                        background_color="white",
-                       max_font_size=500,
-                       color_func=colormap_size_func(cc.m_linear_blue_95_50_c20,500))
+                       max_font_size=450,
+                       color_func=colormap_size_func(cmap_style()['wordcloud'],450))
         plt.style.use('seaborn-notebook')
         plt.imshow(wc.generate_from_frequencies(words))
         plt.axis("off")
-        imsave('%s/wordcloud_topic%s.png'%(current_dir,t+1), wc.generate_from_frequencies(words))
+        plt.imsave('%s/wordcloud_topic%s.png'%(current_dir,t+1), wc.generate_from_frequencies(words))
     print("Wordclouds saved.")
 
 
@@ -110,10 +119,10 @@ def get_dynamic_colors(data,cmap_relative=False):
         max_val = abs(max(data,key=abs))
         bound = max_val + max_val/20
         norm = Normalize(vmin=-bound, vmax=bound)
-        color = cc.m_diverging_gwr_55_95_c38_r
+        color = cmap_style()['diverging']
     else:
         norm = Normalize(vmin=min(data), vmax=max(data))
-        color = cc.m_linear_blue_95_50_c20
+        color = cmap_style()['linear']
     cmap = cm.get_cmap(color)
     colors = list(map(lambda x: cmap(norm(x)), data))
     sm = plt.cm.ScalarMappable(cmap=cmap,norm=norm)
@@ -135,8 +144,8 @@ def retrieve_wordclouds(wordcloud_dir):
 def initialize_grid(num_topics,gradient=False):
     row = math.ceil(math.sqrt(num_topics))
     col = row
-    fig = plt.figure(figsize=(col-0.35,row))
-    gs = gridspec.GridSpec(row, col, wspace=0, hspace=0.10)
+    fig = plt.figure(figsize=(col,row))
+    gs = gridspec.GridSpec(row, col, wspace=0.04, hspace=0.04)
     return fig, gs
 
 def _save_and_close(fig,figpath):

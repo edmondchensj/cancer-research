@@ -143,8 +143,7 @@ def get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir):
 def main():
     '''
     Next steps:
-    [To do] Style coherence graph (20) Then run model again. (15)
-    [To do] Add another criteria for topic distribution -> at least 10 pubmed intra citations. 
+    [To do] Add another criteria for topic distribution -> at least 10 pubmed intra citations. (maybe)
     [To do] Footnotes to explain data source, thresholds, special graph related comments. (30)
     [To do] Blog site. (30) Blog post (2)
     '''
@@ -157,11 +156,11 @@ def main():
         print(f'\n* Now postprocessing for {num_topics} topics model ...')
 
         ''' To select models '''
-        if num_topics != 13:
+        if num_topics not in [15]:
             print('* --Skip-- ')
             continue
         ''' Declare if model has been run before (default: False) '''
-        prev_run = True
+        prev_run = False
 
         print('\n* Preparation step: ')
         current_dir,wordcloud_dir = make_dir(parent_dir,model)

@@ -28,6 +28,7 @@ def _get_user_cutoff():
     return cutoff
 
 def get_best_model_manually(models,coherence_values,num_topics_range,model_dir):
+    # Selects best scoring model under the number of topics determined by user.
     input('* Press enter to get best models manually. Ctl-c to exit. ')
     get = 'y'
     while get=='y':
@@ -61,7 +62,7 @@ def get_top_scores_and_index(coherence_values,num_topics_range,cutoff):
 
 def get_topn_models(models,coherence_values,num_topics_range,model_dir,n=7):
     ''' Automatically saves top n models with number of topics equal or less than the cutoff. '''
-    cutoff = 18
+    cutoff = 25
     print('* Now getting top %d models at max %d topics' %(n,cutoff))
     seq = get_top_scores_and_index(coherence_values,num_topics_range,cutoff)
     topn_scores_idx = heapq.nlargest(n, seq)
@@ -122,11 +123,11 @@ def main():
 
     test_run = False # Test code.
     if not test_run: 
-        num_topics_range = range(2,25,1) 
+        num_topics_range = range(3,35,1) 
         num_trials = 5
         num_models_to_save = 7
     else:
-        num_topics_range = range(2,5,1)
+        num_topics_range = range(3,5,1)
         num_trials = 1
         num_models_to_save = 3
 

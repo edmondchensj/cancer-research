@@ -12,13 +12,7 @@ import pyLDAvis.gensim  # don't skip this
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.image as mpimg
-from PIL import Image
-from wordcloud import WordCloud, STOPWORDS
-from scipy.misc import imsave
 from itertools import product
-
-from glob import iglob
-from PIL import Image
 
 # Customized Graphing Tool
 import graphing_tools.graphing as gr
@@ -46,7 +40,7 @@ def load_models(model_dir):
     model_lst = filter(lambda m: 'model' in m, lst)
     models = []
     for model_file in model_lst:
-        with open(str(parent_dir+'/models/'+model_file),'rb') as f:
+        with open(str(model_dir+'/'+model_file),'rb') as f:
             models.append(pickle.load(f))
     return models
 
@@ -68,16 +62,20 @@ def visualize_models(models,parent_dir,corpus,id2word,selected_models=None):
         wcg.basicGrid(num_topics,wordcloud_dir=current_dir,target_dir=current_dir)
 
 def main():
+    ''' Usage:
+        To visualize selected models, enter topic number in "selected_models" below.
+        To visualize all, remove selected_models.
+    '''
     parent_dir = 'saved_files/1997_to_2017'
     model_dir = parent_dir + '/models'
 
     # Part I: Show Coherence Graph
-    gr.show_coherence_graph(model_dir)
+    #gr.show_coherence_graph(model_dir)
 
     # Part II: Visualize Selected Models
-    #corpus,id2word = load_preprocess_data(parent_dir)
-    #models = load_models(model_dir)
-    #visualize_models(models,parent_dir,corpus,id2word,selected_models=[13,15,17])
+    corpus,id2word = load_preprocess_data(parent_dir)
+    models = load_models(model_dir)
+    visualize_models(models,parent_dir,corpus,id2word,selected_models=[18])
    
 if __name__ == "__main__":
     main()
