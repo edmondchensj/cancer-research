@@ -44,7 +44,10 @@ def load_models(model_dir):
             models.append(pickle.load(f))
     return models
 
-def visualize_models(models,parent_dir,corpus,id2word,selected_models=None):
+def visualize_models(parent_dir,selected_models=None):
+    corpus,id2word = load_preprocess_data(parent_dir)
+    models = load_models(parent_dir+'/models')
+
     for model in models:
         # Select models to run. 
         num_topics = model.num_topics
@@ -64,18 +67,15 @@ def visualize_models(models,parent_dir,corpus,id2word,selected_models=None):
 def main():
     ''' Usage:
         To visualize selected models, enter topic number in "selected_models" below.
-        To visualize all, remove selected_models.
+        To visualize all saved models, remove selected_models.
     '''
     parent_dir = 'saved_files/1997_to_2017'
-    model_dir = parent_dir + '/models'
 
     # Part I: Show Coherence Graph
-    #gr.show_coherence_graph(model_dir)
+    #gr.show_coherence_graph(parent_dir+'/models')
 
     # Part II: Visualize Selected Models
-    corpus,id2word = load_preprocess_data(parent_dir)
-    models = load_models(model_dir)
-    visualize_models(models,parent_dir,corpus,id2word,selected_models=[18])
+    visualize_models(parent_dir,selected_models=[11])
    
 if __name__ == "__main__":
     main()

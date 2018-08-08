@@ -81,14 +81,14 @@ def get_wordclouds(model,current_dir):
     mask = np.array(mask)
 
     for t in range(model.num_topics):
-        words = dict(model.show_topic(t, 15))
+        words = dict(model.show_topic(t, 20))
         wc = WordCloud(font_path='/Library/Fonts/Helvetica.dfont', # or HelveticaNeue
                        mask=mask,
                        prefer_horizontal=0.95,
                        relative_scaling=0.4,
                        background_color="white",
-                       max_font_size=450,
-                       color_func=colormap_size_func(cmap_style()['wordcloud'],450))
+                       max_font_size=500,
+                       color_func=colormap_size_func(cmap_style()['wordcloud'],500))
         plt.style.use('seaborn-notebook')
         plt.imshow(wc.generate_from_frequencies(words))
         plt.axis("off")

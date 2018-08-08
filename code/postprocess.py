@@ -109,8 +109,8 @@ def get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir):
     print('* -> Getting Year Trends  ...')
 
     print('* - - > Get trend in terms of absolute papers  ...')
-    #year_trend,total_growth = _trend(df,num_topics,threshold,relative=False)
-    #gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
+    year_trend,total_growth = _trend(df,num_topics,threshold,relative=False)
+    gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
 
     print('* - - > Get trend in terms of proportion of total papers ...')
     year_trend,total_growth = _trend(df,num_topics,threshold,relative=True)
@@ -119,7 +119,8 @@ def get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir):
     return year_trend,total_growth
 
 def _total_growth(year_trend):
-    return list(map(lambda x: x.fillna(0).values[-1] - x.fillna(0).values[0],year_trend))
+    # Gets total growth as % of 1997 number. Does not work if there were zero papers published in 1997. 
+    return list(map(lambda x: (x.fillna(0).values[-1] - x.values[0])/x.values[0]*100,year_trend))
 
 def _trend(df,num_topics,threshold,relative=False):
     year_trend = []
@@ -141,12 +142,6 @@ def get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir):
     gr.merge_two_venns(venn1,venn2,current_dir)
 
 def main():
-    '''
-    Next steps:
-    [To do] Add another criteria for topic distribution -> at least 10 pubmed intra citations. (maybe)
-    [To do] Footnotes to explain data source, thresholds, special graph related comments. (30)
-    [To do] Blog site. (30) Blog post (2)
-    '''
     parent_dir = 'saved_files/1997_to_2017'
     corpus = load_corpus(parent_dir)
     models = load_models(parent_dir)
@@ -156,11 +151,11 @@ def main():
         print(f'\n* Now postprocessing for {num_topics} topics model ...')
 
         ''' To select models '''
-        if num_topics not in [15]:
+        if num_topics not in [11]:
             print('* --Skip-- ')
             continue
         ''' Declare if model has been run before (default: False) '''
-        prev_run = False
+        prev_run = True
 
         print('\n* Preparation step: ')
         current_dir,wordcloud_dir = make_dir(parent_dir,model)

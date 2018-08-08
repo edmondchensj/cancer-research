@@ -16,6 +16,7 @@ import pickle
 import time
 
 ''' Table of Contents
+    [To improve] avoid lower casing. try making ngram with spacy. 
     1. Preprocessing functions
     2. Generate summary
     3. Main function '''
@@ -55,14 +56,15 @@ def remove_stopwords_prelim(texts):
     return [[word for word in doc if word not in stops] for doc in texts]
 
 def breastcancer_stopwords():
-    # l1 terms are common across all breast cancer topics and not part of an important n-gram.
-    # For terms like breast cancer suppresor candidate (BCSC-1), BCSC-1 will be kept because it is a proper noun.
-    # l2 terms describe broad categories and/or may be part of n-gram. e.g. young_woman, older_woman makes woman l2 and not l1. other examples: fracture_risk and elevated_risk
-    return {'l1':['breast','cancer','cancers','female','study','research','model','effect','association',
-                'percent','confidence','interval','hazard','ratio','article','data','risk',
-                'review','disease','stage','trial','clinical','factor','role','tumor','tumour'],
-            'l2':['treatment','therapy','therapeutic','cell','use','survivor','woman',
-                'patient','surgery','case','evidence','benefit',
+    # l1 terms are common across all breast cancer topics and not part of an important n-gram. 
+    # l2 terms describe broad categories and/or may be part of n-gram. examples: fracture_risk and elevated_risk; not sure about patient/woman. 
+    return {'l1':['breast','cancer','cancers','female','research','model','effect','association',
+                'outcome','outcomes','question','finding','findings','control','study','studies',
+                'percent','confidence','interval','hazard','ratio','article','data','risk','program',
+                'review','reviews','disease','stage','trial','clinical','factor','role','tumor','tumour',
+                'evidence','definition','practice','paper','current','woman','women'],
+            'l2':['treatment','therapy','therapeutic','cell','use','survivor',
+                'patient','surgery','case','benefit',
                 'survival','technique','detection','method','management','diagnosis',
                 'care','gene','efficacy','mechanism','development','pathway',
                 'receptor','activity','function','estrogen','protein','expression','target','growth','estrogen',
@@ -71,11 +73,15 @@ def breastcancer_stopwords():
                 'testing','identification','intervention','regimen','test','et_al','group',
                 'bc','prognosis','subtype','inhibitor','biology','analysis','rate','procedure','tissue','level','change',
                 'datum','bca','specimen','mortality','evaluation','signaling_pathway','activation','signal','regulation',
-                'status','assessment','addition','health']} 
+                'status','assessment','addition','health',
+                'signature','stat','screening','focus','property','action','molecule','application',
+                'process','discovery','characteristic','assay','panel','guideline','report','syndrome','examination','exam',
+                'user','outlook','key','recommendation','option','challenge','tool','guide','issue','measure']}
                 # comments: some are difficult to decide - "intervention' -> could refer to population-wide intervention policies. 
                 # "bc" appears after lemmatizing - perhaps from LTQOL-BC or breast-conserving surgery (BCS) - we lose some information here, though BCS has other terms (mastectomy). 
                 # HR_CI stands for hazard ratio and confidence intervals. 
-                # BCa is short for breast cancer, but could also refer to other things.  
+                # BCa is short for breast cancer, but could also refer to other things. 
+                # Mammogram/MRI is better than "screening". "Examination" also can be specified (self- or physical-)
 def make_ngrams(texts):
     print('* -> Forming Bi- and tri-grams (words that appear together might be a term e.g. false_positive')
     bigram = gensim.models.Phrases(texts,threshold=10) # higher threshold fewer phrases.

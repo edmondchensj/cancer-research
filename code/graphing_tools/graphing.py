@@ -53,18 +53,18 @@ def set_plot_style():
 
 def _make_plot(num_topics,narrow=False):
     set_plot_style()
-    fig = plt.figure(figsize=(6,4.8))
+    fig = plt.figure(figsize=(7,5))
     gs1 = gridspec.GridSpec(1,1)
     if narrow: # for topic distribution. shift chart to the right and make more narrow. 
-        gs1.update(left=0.1,right=0.5) # width=0.4
+        gs1.update(left=0.08,right=0.48) # width=0.4
     else:
         gs1.update(left=0,right=0.44) # width=0.44
 
     col = math.floor(math.sqrt(num_topics))
     row = math.ceil(num_topics/col)
-    width = math.sqrt(col/row)*0.47
+    width = math.sqrt(col/row)*0.42+0.04
     gs2 = gridspec.GridSpec(row,col,wspace=0.02,hspace=0.02)
-    gs2.update(left=0.98-width,right=0.98) # width=0.38
+    gs2.update(left=0.98-width,right=0.98)
     return fig,gs1,gs2
 
 def _save_and_close(fig,figpath):
@@ -81,7 +81,19 @@ def _make_colorbar(fig,sm,cbar_label):
     cbar.ax.tick_params(size=0)
     cbar.outline.set_visible(False)
 
+def _set_title_footnote(fig,plot):
+    fig.text(-0.05,0.945,_title()[plot],size='x-large',color='#2D2D2D')
+    fig.text(-0.05,-0.025,f'{_footnote()["std"]}',size='xx-small')
 
+def _title():
+    return {'topic_mention':'What topics are most prevalent in breast cancer research?',
+            'trend_rel':'What topics gained popularity in the past 20 years?'}
+
+def _footnote():
+    return {'std':'Based on a minimum topic contribution of 10%, by Latent Dirichlet Allocation (LDA).'
+            '\nData Source: 12,951 review paper abstracts with keyword "breast cancer",'
+            ' published between 1997 to 2017. Retrieved from PubMed.'
+            '\nTopic Modeling algorithm: LDA with Term Frequency-Inverse Document Frequency (TFIDF).'}
 # 2. Distribution
 def show_distribution(data,model,current_dir,wordcloud_dir,dominant=False):
     num_topics = model.num_topics
@@ -91,6 +103,7 @@ def show_distribution(data,model,current_dir,wordcloud_dir,dominant=False):
     _plot_graph(gs1,data,_topic_keywords(model),current_dir)
     wcg.get_wordcloud_grid(fig,gs2,num_topics,wordcloud_dir,current_dir,dynamic_color=dynamic_color,sm=sm,save=False)
     _make_colorbar(fig,sm,cbar_label='Total Papers')
+    if not dominant: _set_title_footnote(fig,'topic_mention')
 
     _save_and_close(fig,f'{current_dir}/topic_{"dominant" if dominant else "mention"}.png')
 
@@ -124,7 +137,8 @@ def show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
 
     _plot_trend(gs1,year_trend,total_growth,dynamic_color,relative)
     wcg.get_wordcloud_grid(fig,gs2,num_topics,wordcloud_dir,current_dir,dynamic_color=dynamic_color,sm=sm,save=False)
-    _make_colorbar(fig,sm,cbar_label='Total Growth')
+    _make_colorbar(fig,sm,cbar_label='Total Growth (%)')
+    if relative: _set_title_footnote(fig,'trend_rel')
 
     _save_and_close(fig,f'{current_dir}/topic_trend{"_rel" if relative else "_abs"}.png')
 
@@ -145,7 +159,7 @@ def _plot_trend(gs,year_trend,total_growth,colors,relative=False):
         if i in hlg:
             ax.plot(x,y,color=colors[i],linewidth=2.5,zorder=2)
             growth = high_growth if i==hlg[0] else low_growth
-            growth = f'{growth:+.2f}' if relative else f'{growth:+d}'
+            growth = f'{growth:+.1f}%' if relative else f'{growth:+.0f}%'
             ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='xx-small',fontweight='bold',zorder=3)
         elif i in topn:
             ax.plot(x,y,color=colors[i],zorder=1)
