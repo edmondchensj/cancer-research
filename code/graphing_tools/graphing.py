@@ -31,13 +31,13 @@ def set_plot_style():
 
     # Text
     plt.rcParams['text.color'] = '#666666'
-    plt.rcParams['font.size'] = 9
-    plt.rcParams['axes.labelsize'] = 'x-small'
+    plt.rcParams['font.size'] = 10
+    plt.rcParams['axes.labelsize'] = 'small'
     plt.rcParams['axes.labelcolor'] = '#8F8F8F'
     plt.rcParams['xtick.color'] = '#8F8F8F'
-    plt.rcParams['xtick.labelsize'] = 'xx-small'
+    plt.rcParams['xtick.labelsize'] = 'x-small'
     plt.rcParams['ytick.color'] = '#8F8F8F'
-    plt.rcParams['ytick.labelsize'] = 'xx-small'
+    plt.rcParams['ytick.labelsize'] = 'x-small'
     plt.rcParams['legend.fontsize'] = 'x-small'
 
     # Grid
@@ -53,16 +53,16 @@ def set_plot_style():
 
 def _make_plot(num_topics,narrow=False):
     set_plot_style()
-    fig = plt.figure(figsize=(6,4.25))
+    fig = plt.figure(figsize=(6,4))
     gs1 = gridspec.GridSpec(1,1)
     if narrow: # for topic distribution. shift chart to the right and make more narrow. 
-        gs1.update(left=0.08,right=0.48) # width=0.4
+        gs1.update(left=0.06,right=0.51) # width=0.37
     else:
-        gs1.update(left=0,right=0.44) # width=0.44
+        gs1.update(left=0.06,right=0.47) # width=0.4
 
     col = math.floor(math.sqrt(num_topics))
     row = math.ceil(num_topics/col)
-    width = math.sqrt(col/row)*0.42+0.04
+    width = math.sqrt(col/row)*0.4+0.03
     gs2 = gridspec.GridSpec(row,col,wspace=0.02,hspace=0.02)
     gs2.update(left=0.98-width,right=0.98)
     return fig,gs1,gs2
@@ -77,13 +77,13 @@ def _make_colorbar(fig,sm,cbar_label):
     cbar_ax = fig.add_axes([0.99,0.1,0.01,0.77])
     sm.set_array([])
     cbar = plt.colorbar(sm,cax=cbar_ax)
-    cbar.set_label(cbar_label)
+    cbar.set_label(cbar_label,labelpad=0)
     cbar.ax.tick_params(size=0)
     cbar.outline.set_visible(False)
 
 def _set_title_footnote(fig,plot):
-    fig.text(-0.02,0.945,_title()[plot],size='x-large',color='#101010')
-    fig.text(-0.02,-0.025,f'{_footnote()["std"]}',size='xx-small')
+    fig.text(0.05,0.943,_title()[plot],size='x-large',color='#303030',fontweight='bold',fontname='Myriad Pro')
+    fig.text(0.05,-0.05,f'{_footnote()["std"]}',size='xx-small')
 
 def _title():
     return {'topic_mention':'What topics in breast cancer research ...'
@@ -92,7 +92,7 @@ def _title():
                             '\n                 ... gained the most popularity in the past 20 years?'}
 
 def _footnote():
-    return {'std':'Based on a minimum topic contribution of 10%, by Latent Dirichlet Allocation (LDA).'
+    return {'std':'Paper counts are based on minimum topic contribution of 10%, by Latent Dirichlet Allocation (LDA).'
             '\nData Source: Abstracts from 12,951 review papers with keyword "breast cancer",'
             ' published between 1997 to 2017. Retrieved from PubMed.'
             '\nTopic Modeling algorithm: LDA with Term Frequency-Inverse Document Frequency (TFIDF).'}
@@ -114,7 +114,9 @@ def _plot_graph(gs,data,topic_keywords,current_dir):
     y = np.arange(len(data))
     ax.barh(y,data,align='center')
     ax.set_yticks(y)
-    ax.set_yticklabels(topic_keywords)
+    ax.set_yticklabels(np.arange(1,len(data)+1))
+    #ax.set_yticklabels(topic_keywords)
+    ax.set_ylabel('Topic')
     ax.invert_yaxis()
     ax.tick_params(axis=u'both', which=u'both',length=0) # remove tick marks.
     ax.set_xlabel('Total Papers')
@@ -161,7 +163,7 @@ def _plot_trend(gs,year_trend,total_growth,colors,relative=False):
         if i in hlg:
             ax.plot(x,y,color=colors[i],linewidth=2.5,zorder=2)
             growth = high_growth if i==hlg[0] else low_growth
-            growth = f'{growth:+.1f}%' if relative else f'{growth:+.0f}%'
+            growth = f'{growth:+.0f}%' if relative else f'{growth:+.0f}%'
             ax.annotate(f'Topic {i+1} ({growth})',xy=(ann_x,ann_y),fontsize='x-small',fontweight='bold',zorder=3)
         elif i in topn:
             ax.plot(x,y,color=colors[i],zorder=1)
@@ -189,7 +191,7 @@ def _auto_adjust(ann_list,x,y):
     if ann_list:
         nearest = (np.abs(np.asarray(ann_list) - ann_y)).argmin()
         distance = ann_y - ann_list[nearest]
-        min_pad = 0.018
+        min_pad = 0.03
         if abs(distance) < min_pad:
             pad = min_pad-abs(distance)
             if (distance > 0): # shift up
