@@ -28,11 +28,8 @@ The entire process can be broken down into 4 parts, which has to be run in corre
 * Run `python code/build_models.py`
 
 ### 4. Preliminary Visualization
-* This outputs a coherence graph to select the optimum number of topics and a list of wordclouds that will be required for step 5. 
+* This outputs a coherence graph to select the optimum number of topics and a list of wordclouds that will be required for step 5. The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
 * Run `python code/visualize_models.py`
 
 ### 5. Postprocessing and final Visualization
 * Run `python code/postprocess.py`
-
-## Misc
-The raw data that I retrieved from PubMed is shown in the *data* folder. The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
