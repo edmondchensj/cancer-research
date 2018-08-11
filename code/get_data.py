@@ -1,5 +1,4 @@
 from Bio import Entrez
-from pprint import pprint
 import pandas as pd
 import time
 from lxml import etree
@@ -17,10 +16,8 @@ def get_ids(query,api,batch_size,batch_start):
 	pmids = record["IdList"]
 	return pmids
 
-def get_text(record):
-	#categories = ['BACKGROUND','OBJECTIVE','CONCLUSIONS']
+def get_text(record):=
 	full_text = ""
-	#for category in categories:
 	texts = record.xpath("//AbstractText/text()")
 	full_text = ' '.join(texts)
 	return full_text

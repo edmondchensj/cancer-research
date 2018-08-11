@@ -15,12 +15,6 @@ import pandas as pd
 import pickle
 import time
 
-''' Table of Contents
-    [To improve] avoid lower casing. try making ngram with spacy. 
-    1. Preprocessing functions
-    2. Generate summary
-    3. Main function '''
-
 # 1. Preprocessing functions
 def refine_data(file_name,start_year,end_year):
     pd.options.display.max_colwidth = 12
@@ -78,10 +72,9 @@ def breastcancer_stopwords():
                 'process','discovery','characteristic','assay','panel','guideline','report','syndrome','examination','exam',
                 'user','outlook','key','recommendation','option','challenge','tool','guide','issue','measure']}
                 # comments: some are difficult to decide - "intervention' -> could refer to population-wide intervention policies. 
-                # "bc" appears after lemmatizing - perhaps from LTQOL-BC or breast-conserving surgery (BCS) - we lose some information here, though BCS has other terms (mastectomy). 
                 # HR_CI stands for hazard ratio and confidence intervals. 
                 # BCa is short for breast cancer, but could also refer to other things. 
-                # Mammogram/MRI is better than "screening". "Examination" also can be specified (self- or physical-)
+
 def make_ngrams(texts):
     print('* -> Forming Bi- and tri-grams (words that appear together might be a term e.g. false_positive')
     bigram = gensim.models.Phrases(texts,threshold=10) # higher threshold fewer phrases.
@@ -93,9 +86,7 @@ def make_ngrams(texts):
 def lemmatize(texts, allowed_postags=['PROPN','NOUN']): 
     # Part-of-speech tags: 
     # - PROPN (proper noun) keeps unique medical terms that do not have a root. 
-    # - remove ADV, VERB, ADJ. 
-    # - ADJ may be useful, but papers discussing a certain topic may see them differently, thus having oppposite adjectives. 
-    # concern -> each doc is already tokenized before hand. would this affect POS accuracy? 
+    # - ADJ may be useful, but removing ADJ, VERB etc helps to remove any biased sentiments that may form topics in themselves. 
     # https://spacy.io/api/annotation
     timer = time.time()
     print('* -> Lemmatization i.e. find root form of words.')
@@ -157,11 +148,12 @@ def make_directory(start_year,end_year):
     return directory
 
 def main():
-    tic = time.time()
+    # Set data filepath and desired year range. 
     file_name = "data/breastcancer_reviews_hasabstract_1997to2017.csv"
-    start_year = 1997  # set start year
-    end_year = 2017    # set end year
+    start_year = 1997 
+    end_year = 2017
 
+    tic = time.time()
     print('\n* Phase 1: Text preprocessing ...')
     df = refine_data(file_name,start_year,end_year)
     data = abstracts_to_list(df)

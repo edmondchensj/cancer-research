@@ -9,10 +9,6 @@ import math
 # Plotting tools
 import pyLDAvis
 import pyLDAvis.gensim  # don't skip this
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import matplotlib.image as mpimg
-from itertools import product
 
 # Customized Graphing Tool
 import graphing_tools.graphing as gr
@@ -65,17 +61,22 @@ def visualize_models(parent_dir,selected_models=None):
         wcg.basicGrid(num_topics,wordcloud_dir=current_dir,target_dir=current_dir)
 
 def main():
-    ''' Usage:
+    ''' 
+    Purpose:
+        1. Visualizes coherence scores from models built in build_models.py
+        2. Visualizes selected models as a wordcloud grid. 
+
+    Usage:
         To visualize selected models, enter topic number in "selected_models" below.
-        To visualize all saved models, remove selected_models.
+        To visualize all saved models, set selected_models=None.
     '''
     parent_dir = 'saved_files/1997_to_2017'
 
     # Part I: Show Coherence Graph
-    #gr.show_coherence_graph(parent_dir+'/models')
+    gr.show_coherence_graph(parent_dir+'/models')
 
     # Part II: Visualize Selected Models
-    visualize_models(parent_dir,selected_models=[11])
+    visualize_models(parent_dir,selected_models=None)
    
 if __name__ == "__main__":
     main()

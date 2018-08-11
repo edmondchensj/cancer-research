@@ -82,8 +82,8 @@ def _make_colorbar(fig,sm,cbar_label):
     cbar.outline.set_visible(False)
 
 def _set_title_footnote(fig,plot):
-    fig.text(0.05,0.943,_title()[plot],size='x-large',color='#303030',fontweight='bold',fontname='Myriad Pro')
-    fig.text(0.05,-0.05,f'{_footnote()["std"]}',size='xx-small')
+    fig.text(0.03,0.943,_title()[plot],size='x-large',color='#303030',fontweight='bold',fontname='Myriad Pro')
+    fig.text(0.03,-0.08,f'{_footnote()["std"]}',size='xx-small')
 
 def _title():
     return {'topic_mention':'What topics in breast cancer research ...'
@@ -94,8 +94,9 @@ def _title():
 def _footnote():
     return {'std':'Paper counts are based on minimum topic contribution of 10%, by Latent Dirichlet Allocation (LDA).'
             '\nData Source: Abstracts from 12,951 review papers with keyword "breast cancer",'
-            ' published between 1997 to 2017. Retrieved from PubMed.'
+            '\n                     published between 1997 to 2017. Retrieved from PubMed.'
             '\nTopic Modeling algorithm: LDA with Term Frequency-Inverse Document Frequency (TFIDF).'}
+
 # 2. Distribution
 def show_distribution(data,model,current_dir,wordcloud_dir,dominant=False):
     num_topics = model.num_topics

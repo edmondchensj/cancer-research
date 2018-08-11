@@ -1,22 +1,13 @@
-import re
 import numpy as np
 import pandas as pd
-from pprint import pprint
 import pickle
 import time
 import os
 import heapq
-
-# Gensim
 import gensim
 import gensim.corpora as corpora
 from gensim.utils import simple_preprocess
 from gensim.models import CoherenceModel
-
-# Plotting tools
-import pyLDAvis
-import pyLDAvis.gensim  # don't skip this
-import matplotlib.pyplot as plt
 
 def _get_user_cutoff():
     for i in range(3):
@@ -74,7 +65,7 @@ def get_topn_models(models,coherence_values,num_topics_range,model_dir,n=7):
         print("* -> Model %d: Number of topics = %d, coherence score = %.3f, in Trial %s" %(i+1,optimal_topics,score,index[0]+1))
     print('* -> Top %s models saved as .pkl files in %s' %(n,model_dir))
 
-def get_coherence_values(corpus, id2word, texts, num_topics_range, num_trials):
+def build_lda_models(corpus, id2word, texts, num_topics_range, num_trials):
     print("\n* Running %s trials up to %s topics each to determine optimal number of topics." %(num_trials,num_topics_range[-1]))
     tic = time.time()
     coherence_values = [[] for i in range(num_trials)]
@@ -117,11 +108,9 @@ def save_coherence_values(coherence_values,num_topics_range,model_dir):
     with open(f'{model_dir}/num_topic_range.pkl','wb') as f:
         pickle.dump(num_topics_range,f)
 
-def main():
-    filepath = 'saved_files/1997_to_2017'
-    print('* Building models with data from %s' %filepath.split('/')[-1])
-
-    test_run = False # Test code.
+def get_parameters(test_run):
+    # Set desired parameters here. 
+    # Test run allows us to run quick LDA models to test the Python script.
     if not test_run: 
         num_topics_range = range(3,35,1) 
         num_trials = 5
@@ -130,20 +119,31 @@ def main():
         num_topics_range = range(3,5,1)
         num_trials = 1
         num_models_to_save = 3
+    return num_topics_range,num_trials,num_models_to_save
 
+def main():
+    filepath = 'saved_files/1997_to_2017'
+    print('* Building models with data from %s' %filepath.split('/')[-1])
+
+    num_topics_range,num_trials,num_models_to_save = get_parameters(test_run=False)
     corpus,id2word,texts,model_dir = load_preprocess_data(filepath)
 
-    models, coherence_values = get_coherence_values(corpus,
-                                                    id2word, 
-                                                    texts,
-                                                    num_topics_range,
-                                                    num_trials)
-    
+    models,coherence_values = build_lda_models(corpus,
+                                            id2word, 
+                                            texts,
+                                            num_topics_range,
+                                            num_trials)
+
     save_coherence_values(coherence_values,num_topics_range,model_dir)
-
-    get_topn_models(models,coherence_values,num_topics_range,model_dir,n=num_models_to_save)
-
-    get_best_model_manually(models,coherence_values,num_topics_range,model_dir)
+    get_topn_models(models,
+                    coherence_values,
+                    num_topics_range,
+                    model_dir,
+                    n=num_models_to_save)
+    get_best_model_manually(models,
+                            coherence_values,
+                            num_topics_range,
+                            model_dir)
 
 if __name__ == "__main__":
     main()

@@ -7,10 +7,10 @@ import pickle
 import gensim.corpora as corpora
 import os
 
-# My helper scripts
+# My helper script
 import graphing_tools.graphing as gr
 
-''' Preparation '''
+''' Preparation functions '''
 def load_corpus(parent_dir):
     return corpora.MmCorpus('%s/preprocess/corpus.mm'%parent_dir)
 
@@ -68,7 +68,7 @@ def load_topic_scores(model,current_dir):
         print('Document does not have "Unnamed" column.')
     return df
 
-''' Output '''
+''' Output functions '''
 def most_representative_titles(model,df,directory):
     num_topics = model.num_topics
 
@@ -82,9 +82,11 @@ def most_representative_titles(model,df,directory):
     return df_most_rep_titles
 
 def get_topic_distribution(df,model,current_dir,threshold,wordcloud_dir):
+    # Topic Mentions counts papers based on a minimum topic contribution of 10%.  
+    # Topic Distribution counts papers only if the topic is the dominant topic of that paper. 
+    # Uncomment topic_dist function below to get (dominant) topic distribution. 
 
     topic_mentions = _topic_mentions(df,model,current_dir,threshold,wordcloud_dir)   
-
     #topic_dist = _topics_distrib(df,model,threshold,current_dir,wordcloud_dir,dominant=True)
 
     return topic_mentions
@@ -106,15 +108,18 @@ def _topic_distrib(df,model,threshold,current_dir,wordcloud_dir):
     return topic_dist
 
 def get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir):
+    # Gets year trend either in absolute number of papers or as a proportion of total papers.
+    # By default, we will run only the proportion graph. 
+    # Uncomment second function below to get absolute graph. 
+
     print('* -> Getting Year Trends  ...')
-
-    print('* - - > Get trend in terms of absolute papers  ...')
-    year_trend,total_growth = _trend(df,num_topics,threshold,relative=False)
-    gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
-
     print('* - - > Get trend in terms of proportion of total papers ...')
     year_trend,total_growth = _trend(df,num_topics,threshold,relative=True)
     gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=True)
+
+    #print('* - - > Get trend in terms of absolute papers  ...')
+    #year_trend,total_growth = _trend(df,num_topics,threshold,relative=False)
+    #gr.show_trend(year_trend,total_growth,current_dir,wordcloud_dir,relative=False)
 
     return year_trend,total_growth
 
@@ -134,28 +139,46 @@ def _trend(df,num_topics,threshold,relative=False):
     return year_trend, total_growth
 
 def get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir):
-    print('* -> Getting Venn Diagrams to show intersectionality ... ')
-    #__ = gr.venn_top3(df,year_trend,threshold,current_dir,wordcloud_dir)
+    # Outputs a Venn diagram that shows intersectionality of papers. 
+    # Not used for my blog post but made available for future use. 
+    print('* -> Getting Venn Diagrams ...')
+    print('* - - -> Getting Venn Diagrams for most trending topics ...')
     venn1 = gr.venn_growth(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir)
-    #__ = gr.venn_top3(df,year_trend,0.25,current_dir,wordcloud_dir)
     venn2 = gr.venn_growth(df,year_trend,total_growth,0.25,current_dir,wordcloud_dir)
     gr.merge_two_venns(venn1,venn2,current_dir)
 
+    print('* - - -> Getting Venn Diagrams for top 3 most popular topics ...')
+    venn1 = gr.venn_top3(df,year_trend,threshold,current_dir,wordcloud_dir)
+    venn2 = gr.venn_top3(df,year_trend,0.25,current_dir,wordcloud_dir)
+    gr.merge_two_venns(venn1,venn2,current_dir)
+
 def main():
+    ''' 
+    Purpose:
+        Visualizes two main charts 
+            1) Topic Distribution 
+            2) Yearly Trend
+        Additional options
+            1) Venn Diagram 
+            2) Most representative titles
+    '''
     parent_dir = 'saved_files/1997_to_2017'
+    
+    # Set you wish to run only a subset of saved models, set selected_models below. 
+    # e.g. selected_models = [11,15] , where 11 and 15 are the numbers of topics of selected models. 
+    selected_models = None 
+    # Helps speed up future iterations of postprocessing if these topics have been postprocessed before. False by default.  
+    prev_run = False
+
     corpus = load_corpus(parent_dir)
     models = load_models(parent_dir)
-
     for model in models:
         num_topics = model.num_topics
         print(f'\n* Now postprocessing for {num_topics} topics model ...')
 
-        ''' To select models '''
-        if num_topics not in [11]:
+        if num_topics not in selected_models:
             print('* --Skip-- ')
             continue
-        ''' Declare if model has been run before (default: False) '''
-        prev_run = True
 
         print('\n* Preparation step: ')
         current_dir,wordcloud_dir = make_dir(parent_dir,model)
@@ -166,9 +189,11 @@ def main():
             df = load_topic_scores(model,current_dir) # if topic_scores already retrieved. 
 
         print('\n* Output step: ')
-        threshold = 0.10
+        threshold = 0.10 # set minimum topic contribution
         topic_mentions = get_topic_distribution(df,model,current_dir,threshold,wordcloud_dir)
         year_trend,total_growth = get_year_trend(df,num_topics,current_dir,threshold,wordcloud_dir)
+        
+        # Additional visualizations that you can use. Uncomment to plot. 
         #get_venn(df,year_trend,total_growth,threshold,current_dir,wordcloud_dir)
         #most_rep_titles = most_representative_titles(model,df,current_dir)
 
