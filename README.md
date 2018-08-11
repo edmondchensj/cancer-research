@@ -33,3 +33,6 @@ The entire process can be broken down into 4 parts, which has to be run in corre
 
 ### 5. Postprocessing and final Visualization
 * Run `python code/postprocess.py`
+
+## Acknowledgements
+Data is provided by the US National Library of Medicine (NLM) via the PubMed database. The topic modeling library used is Gensim. 
