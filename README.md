@@ -35,4 +35,4 @@ The entire process can be broken down into 4 parts, which has to be run in corre
 * Run `python code/postprocess.py`
 
 ## Misc
-The raw data that I retrieved from PubMed is shown in the **data** folder. The **helper_files** folder contains a .png file to mask wordclouds in a circle shape. 
+The raw data that I retrieved from PubMed is shown in the *data* folder. The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
