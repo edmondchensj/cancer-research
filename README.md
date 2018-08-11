@@ -25,7 +25,7 @@ The entire process can be broken down into 4 parts, which has to be run in corre
 * Note: A big factor affecting the topic model results is the list of additional stop words. You would want to customize your own list based on the domain of research. 
 
 ### 3. Build LDA Model
-* Run `python code/build_models.py
+* Run `python code/build_models.py`
 
 ### 4. Preliminary Visualization
 * This outputs a coherence graph to select the optimum number of topics and a list of wordclouds that will be required for step 5. 
@@ -33,3 +33,6 @@ The entire process can be broken down into 4 parts, which has to be run in corre
 
 ### 5. Postprocessing and final Visualization
 * Run `python code/postprocess.py`
+
+## Misc
+The raw data that I retrieved from PubMed is shown in the **data** folder. The **helper_files** folder contains a .png file to mask wordclouds in a circle shape. 
