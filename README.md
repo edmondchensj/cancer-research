@@ -14,7 +14,7 @@ Topic Modeling is an unsupervised machine learning algorithm that discovers topi
 See my [blog post](https://edmondchensj.github.io/2018/08/09/breast-cancer-trends/) for the results.
 
 ## Usage
-The entire process can be broken down into 5 parts, which has to be run in correct order. 
+The entire process can be broken down into the following parts, which has to be run in correct order. 
 
 ### 1. Data Retrieval
 * Run `python code/get_data.py`
