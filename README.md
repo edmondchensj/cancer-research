@@ -29,7 +29,8 @@ The entire process can be broken down into 5 parts, which has to be run in corre
 
 ### 4a. Preliminary Visualization
 * Run `python code/visualize_models.py`
-* This generates a coherence graph to select the optimum number of topics and a list of wordclouds that will be required for step 4b. The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
+* This generates a coherence graph to select the optimum number of topics, a list of wordclouds that will be required for step 4b, and a grid of wordclouds that combines all topics together. 
+* The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
 
 ### 4b. Postprocessing and final Visualization
 * Run `python code/postprocess.py`
