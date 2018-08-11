@@ -32,7 +32,7 @@ The entire process can be broken down into the following parts, which has to be 
 * This generates a coherence graph to select the optimum number of topics, a list of wordclouds that will be required for step 4b, and a grid of wordclouds that combines all topics together. 
 * The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
 
-### 4b. Postprocessing and final Visualization
+### 4b. Postprocessing
 * Run `python code/postprocess.py`
 * This generates two key charts that show the distribution and trends of each topic. 
 
