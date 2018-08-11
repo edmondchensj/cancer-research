@@ -14,7 +14,7 @@ Topic Modeling is an unsupervised machine learning algorithm that discovers topi
 See my [blog post](https://edmondchensj.github.io/2018/08/09/breast-cancer-trends/) for the results.
 
 ## Usage
-The entire process can be broken down into 4 parts, which has to be run in correct order. 
+The entire process can be broken down into 5 parts, which has to be run in correct order. 
 
 ### 1. Data Retrieval
 * Run `python code/get_data.py`
@@ -27,12 +27,13 @@ The entire process can be broken down into 4 parts, which has to be run in corre
 ### 3. Build LDA Model
 * Run `python code/build_models.py`
 
-### 4. Preliminary Visualization
-* This outputs a coherence graph to select the optimum number of topics and a list of wordclouds that will be required for step 5. The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
+### 4a. Preliminary Visualization
 * Run `python code/visualize_models.py`
+* This generates a coherence graph to select the optimum number of topics and a list of wordclouds that will be required for step 4b. The *helper_files* folder contains a .png file to mask wordclouds in a circle shape. 
 
-### 5. Postprocessing and final Visualization
+### 4b. Postprocessing and final Visualization
 * Run `python code/postprocess.py`
+* This generates two key charts that show the distribution and trends of each topic. 
 
 ## Acknowledgements
 Data is provided by the US National Library of Medicine (NLM) via the PubMed database. The topic modeling library used is Gensim. 
