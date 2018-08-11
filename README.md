@@ -2,7 +2,7 @@
 This project has been published in my blog [here](https://edmondchensj.github.io/2018/08/09/breast-cancer-trends/).
 
 ## Introduction
-This project aims to develop a method to **quickly and comprehensively understand the landscape of breast cancer research**. This approach could be applied to other domains of research. 
+This project aims to develop a method to **quickly understand the landscape of breast cancer research**. This approach could be applied to other domains of research. 
 
 While online databases such as PubMed and Google Scholar provide unprecendented access to research papers, it can be challenging to understand the major frontiers in a field of research. People who are new to a field or subfields may face a "cold-start" problem in which they lack keywords to begin researching. 
 
