@@ -37,4 +37,4 @@ The entire process can be broken down into the following parts, which has to be 
 * This generates two key charts that show the distribution and trends of each topic. 
 
 ## Acknowledgements
-Data is provided by the US National Library of Medicine (NLM) via the PubMed database. The topic modeling library used is Gensim. 
+Data is provided by the US National Library of Medicine (NLM) via the PubMed database.
