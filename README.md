@@ -14,8 +14,6 @@ Topic Modeling is an unsupervised machine learning algorithm that discovers topi
 See my [blog post](https://edmondchensj.github.io/2018/08/09/breast-cancer-trends/) for the results.
 
 ## Usage
-The entire process can be broken down into the following parts, which has to be run in correct order. 
-
 ### 1. Data Retrieval
 * Run `python code/get_data.py`
 * Note: By default, NCBI restricts the rate of downloads to 3 requests per second. To speed up data retrieval, register for an API key, which will increase the rate to 10 requests per second. See [here](https://www.ncbi.nlm.nih.gov/books/NBK25497/) for more information. 
@@ -24,7 +22,7 @@ The entire process can be broken down into the following parts, which has to be 
 * Run `python code/preprocess.py`
 * Note: A big factor affecting the topic model results is the list of additional stop words. You would want to customize your own list based on the domain of research. 
 
-### 3. Build LDA Model
+### 3. Build Topic Model (LDA and TFIDF)
 * Run `python code/build_models.py`
 
 ### 4a. Preliminary Visualization
