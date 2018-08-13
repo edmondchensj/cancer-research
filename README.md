@@ -22,7 +22,7 @@ See my [blog post](https://edmondchensj.github.io/2018/08/09/breast-cancer-trend
 * Run `python code/preprocess.py`
 * Note: A big factor affecting the topic model results is the list of additional stop words. You would want to customize your own list based on the domain of research. 
 
-### 3. Build Topic Model (LDA and TFIDF)
+### 3. Topic Modeling (LDA and TFIDF)
 * Run `python code/build_models.py`
 
 ### 4a. Preliminary Visualization
