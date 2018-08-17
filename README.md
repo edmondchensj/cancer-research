@@ -4,7 +4,7 @@ This project has been published in my blog [here](https://edmondchensj.github.io
 ## Introduction
 This project aims to develop a method to **quickly understand the landscape of breast cancer research**. This approach could be applied to other domains of research. 
 
-While online databases such as PubMed and Google Scholar provide unprecendented access to research papers, it can be challenging to understand the major frontiers in a field of research. People who are new to a field or subfields may face a "cold-start" problem in which they lack keywords to begin researching. 
+Although online databases such as PubMed and Google Scholar provide access to research papers, it can be challenging to understand the major frontiers in a field of research. People who are new to a field or subfields may face a "cold-start" problem in which they lack keywords to begin researching. 
 
 Topic Modeling is an unsupervised machine learning algorithm that discovers topics across a set of documents. The benefits of this approach are in providing:
 * a comprehensive set of prominent keywords used in different subfields
