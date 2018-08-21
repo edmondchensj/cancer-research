@@ -166,9 +166,9 @@ def main():
     
     # Set you wish to run only a subset of saved models, set selected_models below. 
     # e.g. selected_models = [11,15] , where 11 and 15 are the numbers of topics of selected models. 
-    selected_models = None 
+    selected_models = None
     # Helps speed up future iterations of postprocessing if these topics have been postprocessed before. False by default.  
-    prev_run = False
+    prev_run = True
 
     corpus = load_corpus(parent_dir)
     models = load_models(parent_dir)

@@ -82,7 +82,7 @@ def _make_colorbar(fig,sm,cbar_label):
     cbar.outline.set_visible(False)
 
 def _set_title_footnote(fig,plot):
-    fig.text(0.03,0.943,_title()[plot],size='x-large',color='#303030',fontweight='bold',fontname='Myriad Pro')
+    fig.text(0.03,0.943,_title()[plot],size='x-large',color='#303030',fontweight='bold',fontname='Alegreya')
     fig.text(0.03,-0.08,f'{_footnote()["std"]}',size='xx-small')
 
 def _title():
